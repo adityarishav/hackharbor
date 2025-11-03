@@ -1,0 +1,60 @@
+/* AddMachine.css */
+
+.add-machine-container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: auto;
+}
+
+.add-machine-header h1 {
+    color: #ffffff;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #6a44ff;
+    padding-bottom: 0.5rem;
+}
+
+.add-machine-form {
+    background-color: #1a1d21;
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #2a2e33;
+}
+
+.flags-section {
+    margin-top: 2rem;
+    border-top: 1px solid #2a2e33;
+    padding-top: 1.5rem;
+}
+
+.flags-section h3 {
+    color: #e0e0e0;
+    margin-bottom: 1rem;
+}
+
+.flag-input-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.flag-input-group input {
+    flex-grow: 1;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.form-actions {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}

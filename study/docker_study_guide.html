@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dockerization Study Guide for VulnVerse</title>
+    <link rel="stylesheet" href="study_guide_theme.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Dockerization Study Guide for VulnVerse</h1>
+        <p>This guide provides a comprehensive overview of how the VulnVerse application (FastAPI backend and React frontend) was containerized using Docker and Docker Compose. It assumes no prior knowledge of Docker and explains each step in detail, including the creation of necessary files and the reasoning behind specific configurations.</p>
+
+        <section id="introduction">
+            <h2>1. Introduction to Docker and Docker Compose</h2>
+            <h3>What is Docker?</h3>
+            <p>Docker is a platform that allows you to develop, deploy, and run applications in containers. A container is a lightweight, standalone, executable package of software that includes everything needed to run an application: code, runtime, system tools, system libraries, and settings. Containers ensure that an application runs consistently across different environments (development, testing, production).</p>
+            <h3>Why use Docker?</h3>
+            <ul>
+                <li><strong>Consistency:</strong> Your application runs the same way everywhere.</li>
+                <li><strong>Isolation:</strong> Containers isolate applications from each other and from the underlying system.</li>
+                <li><strong>Portability:</strong> You can easily move containers between different Docker-enabled environments.</li>
+                <li><strong>Efficiency:</strong> Containers are lightweight and start quickly.</li>
+            </ul>
+            <h3>What is Docker Compose?</h3>
+            <p>Docker Compose is a tool for defining and running multi-container Docker applications. With Compose, you use a YAML file (<code>docker-compose.yml</code>) to configure your application's services. Then, with a single command, you create and start all the services from your configuration.</p>
+            <h3>Why use Docker Compose for VulnVerse?</h3>
+            <p>VulnVerse consists of multiple services: a FastAPI backend, a React frontend, a PostgreSQL database, and an OpenVPN server. Docker Compose allows us to define all these services, their dependencies, networks, and volumes in one file, making it easy to manage the entire application stack as a single unit.</p>
+        </section>
+
+        <section id="dockerfile-backend">
+            <h2>2. Dockerfile for the FastAPI Backend (`Dockerfile.backend`)</h2>
+            <p>A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image. This Dockerfile builds the FastAPI backend.</p>
+            <h3>File Location:</h3>
+            <p>Create this file in the root directory of your project: <code>D:\VULNverse\vulnverse\Dockerfile.backend</code></p>
+            <h3>Content:</h3>
+            <pre><code class="language-dockerfile"># Use an official Python runtime as a parent image
+FROM python:3.10-slim-bullseye
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Set DEBIAN_FRONTEND to noninteractive to prevent prompts globally for apt commands
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies required for psycopg2
+# Combine update and install to ensure package lists are fresh
+# Use --no-install-recommends to keep image size down
+# Add || exit 1 to ensure build fails immediately on apt error
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    netcat-traditional \
+    && rm -rf /var/lib/apt/lists/* \
+    || (echo "APT-GET FAILED. Check network connectivity and repository sources." && exit 1)
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code into the container
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 8000
+
+# Define environment variable for FastAPI
+ENV PYTHONPATH=/app
+
+# Command to run the application
+CMD ["/bin/bash", "-c", "while ! nc -z postgres 5432; do sleep 0.1; done; uvicorn main:app --host 0.0.0.0 --port 8000"]
+</code></pre>
+            <h3>Explanation of Key Lines:</h3>
+            <ul>
+                <li><code>FROM python:3.10-slim-bullseye</code>: Starts with a lightweight Python 3.10 image based on Debian 11 "Bullseye". This was changed from "buster" because "buster" repositories are End-of-Life.</li>
+                <li><code>WORKDIR /app</code>: Sets the current working directory inside the container to <code>/app</code>. All subsequent commands will run from here.</li>
+                <li><code>ENV DEBIAN_FRONTEND=noninteractive</code>: Prevents interactive prompts during <code>apt-get</code> commands, crucial for automated builds.</li>
+                <li><code>RUN apt-get update && apt-get install -y ...</code>: Updates package lists and installs necessary system packages:
+                    <ul>
+                        <li><code>gcc</code>: A C compiler, often needed for Python packages with C extensions (like <code>psycopg2</code>).</li>
+                        <li><code>libpq-dev</code>: Development files for PostgreSQL client library, also needed by <code>psycopg2</code>.</li>
+                        <li><code>netcat-traditional</code>: A networking utility used to check if the database is ready.</li>
+                        <li><code>--no-install-recommends</code>: Reduces image size by not installing recommended (but not strictly required) packages.</li>
+                        <li><code>rm -rf /var/lib/apt/lists/*</code>: Cleans up apt cache to keep the image small.</li>
+                        <li><code>|| (echo "APT-GET FAILED..." && exit 1)</code>: Ensures the build fails explicitly and prints a helpful message if <code>apt-get</code> encounters an error.</li>
+                    </ul>
+                </li>
+                <li><code>COPY requirements.txt .</code>: Copies your Python dependency list into the container.</li>
+                <li><code>RUN pip install --no-cache-dir -r requirements.txt</code>: Installs all Python packages listed in <code>requirements.txt</code>. <code>--no-cache-dir</code> reduces image size.</li>
+                <li><code>COPY . .</code>: Copies all other files from your project's root directory into the container's <code>/app</code> directory.</li>
+                <li><code>EXPOSE 8000</code>: Informs Docker that the container listens on port 8000.</li>
+                <li><code>ENV PYTHONPATH=/app</code>: Adds the application directory to Python's search path, allowing modules to be imported correctly.</li>
+                <li><code>CMD ["/bin/bash", "-c", "while ! nc -z postgres 5432; do sleep 0.1; done; uvicorn main:app --host 0.0.0.0 --port 8000"]</code>: This is the command that runs when the container starts.
+                    <ul>
+                        <li><code>while ! nc -z postgres 5432; do sleep 0.1; done;</code>: This is a "wait-for-it" loop. It continuously tries to connect to the <code>postgres</code> service (the name of our PostgreSQL container) on port 5432. It pauses for 0.1 seconds between attempts. This ensures the database is fully up and ready before the FastAPI application tries to connect.</li>
+                        <li><code>uvicorn main:app --host 0.0.0.0 --port 8000</code>: Starts the FastAPI application using Uvicorn, listening on all network interfaces (<code>0.0.0.0</code>) and port 8000.</li>
+                        <li><strong>Static Change:</strong> The hostname <code>postgres</code> is hardcoded here to match the service name in <code>docker-compose.yml</code>.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section id="dockerfile-frontend">
+            <h2>3. Dockerfile for the React Frontend (`Dockerfile.frontend`)</h2>
+            <p>This Dockerfile builds the React frontend using a multi-stage build. This approach creates a smaller final image by separating the build environment from the serving environment.</p>
+            <h3>File Location:</h3>
+            <p>Create this file in the <code>frontend</code> directory: <code>D:\VULNverse\vulnverse\frontend\Dockerfile.frontend</code></p>
+            <h3>Content:</h3>
+            <pre><code class="language-dockerfile"># Use an official Node.js runtime as a parent image for the build stage
+FROM node:18 AS build
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json to leverage Docker's cache
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application code
+COPY . .
+
+# Set environment variable for the build process
+ENV VITE_API_BASE_URL=/api
+ENV NODE_OPTIONS=--max_old_space_size=4096 # Added to increase memory for Node.js build
+
+# Build the React app
+RUN npm run build
+
+# Use a lightweight web server (Nginx) to serve the static files in the final stage
+FROM nginx:stable-alpine
+
+# Copy the build output from the previous stage (the 'build' stage)
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80 (Nginx's default HTTP port)
+EXPOSE 80
+
+# Start Nginx in the foreground
+CMD ["nginx", "-g", "daemon off;"]
+</code></pre>
+            <h3>Explanation of Key Lines:</h3>
+            <ul>
+                <li><code>FROM node:18 AS build</code>: The first stage uses a Node.js 18 image (Debian-based) to build the React app. <code>AS build</code> names this stage. This was changed from <code>node:18-alpine</code> for better compatibility.</li>
+                <li><code>WORKDIR /app</code>: Sets the working directory.</li>
+                <li><code>COPY package*.json ./</code>: Copies dependency files. Doing this before <code>COPY . .</code> allows Docker to cache this layer, speeding up rebuilds if only source code changes.</li>
+                <li><code>RUN npm install</code>: Installs all Node.js dependencies.</li>
+                <li><code>COPY . .</code>: Copies the rest of the frontend source code.</li>
+                <li><code>ENV VITE_API_BASE_URL=/api</code>:
+                    <ul>
+                        <li><strong>Static Change:</strong> This environment variable is crucial. Vite (the build tool for React) uses variables prefixed with <code>VITE_</code> to expose them to the client-side code. Setting it to <code>/api</code> means that all API calls from the React app will go to <code>/api</code> relative to the frontend's host, which Nginx will then proxy to the backend.</li>
+                    </ul>
+                </li>
+                <li><code>ENV NODE_OPTIONS=--max_old_space_size=4096</code>: Increases the memory available to Node.js during the build process, preventing potential "out of memory" errors for larger projects.</li>
+                <li><code>RUN npm run build</code>: Executes the React build process, generating static HTML, CSS, and JavaScript files (typically into a <code>dist</code> folder).</li>
+                <li><code>FROM nginx:stable-alpine</code>: The second stage uses a very lightweight Nginx image. This image is much smaller than the Node.js build image, resulting in a smaller final container.</li>
+                <li><code>COPY --from=build /app/dist /usr/share/nginx/html</code>: Copies the static build output from the <code>build</code> stage (<code>/app/dist</code>) to Nginx's default serving directory (<code>/usr/share/nginx/html</code>).</li>
+                <li><code>COPY nginx.conf /etc/nginx/conf.d/default.conf</code>: Copies our custom Nginx configuration file.</li>
+                <li><code>EXPOSE 80</code>: Informs Docker that Nginx listens on port 80.</li>
+                <li><code>CMD ["nginx", "-g", "daemon off;"]</code>: Starts the Nginx server in the foreground.</li>
+            </ul>
+        </section>
+
+        <section id="nginx-conf">
+            <h2>4. Nginx Configuration (`frontend/nginx.conf`)</h2>
+            <p>This file configures Nginx to serve the React application and act as a reverse proxy for the FastAPI backend.</p>
+            <h3>File Location:</h3>
+            <p>Create this file in the <code>frontend</code> directory: <code>D:\VULNverse\vulnverse\frontend\nginx.conf</code></p>
+            <h3>Content:</h3>
+            <pre><code class="language-nginx">server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy API requests to the backend
+    location /api/ {
+        proxy_pass http://backend:8000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+</code></pre>
+            <h3>Explanation of Key Lines:</h3>
+            <ul>
+                <li><code>listen 80;</code>: Nginx listens for incoming HTTP requests on port 80.</li>
+                <li><code>location / { ... }</code>: This block handles requests for the root path (<code>/</code>) and all other static files.
+                    <ul>
+                        <li><code>root /usr/share/nginx/html;</code>: Specifies where Nginx should look for files to serve.</li>
+                        <li><code>index index.html index.htm;</code>: Defines the default files to serve when a directory is requested.</li>
+                        <li><code>try_files $uri $uri/ /index.html;</code>: This is crucial for Single Page Applications (SPAs) like React. If a requested file (<code>$uri</code>) or directory (<code>$uri/</code>) is not found, Nginx will serve <code>/index.html</code>. This allows React Router to handle client-side routing.</li>
+                    </ul>
+                </li>
+                <li><code>location /api/ { ... }</code>: This block handles any requests that start with <code>/api/</code>.
+                    <ul>
+                        <li><code>proxy_pass http://backend:8000/;</code>:
+                            <ul>
+                                <li><strong>Static Change:</strong> This is the core of the API proxy. It forwards all requests matching <code>/api/</code> to the <code>backend</code> service (which is the name of our FastAPI container in Docker Compose) on port 8000.</li>
+                                <li>The trailing slash <code>/</code> in <code>http://backend:8000/</code> is important: it tells Nginx to pass the request path relative to the root of the proxied server.</li>
+                            </ul>
+                        </li>
+                        <li><code>proxy_set_header ...</code>: These lines forward important HTTP headers from the original client request to the backend service, which can be useful for logging, security, and correct request handling by FastAPI.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section id="docker-compose-yml">
+            <h2>5. Docker Compose Configuration (`docker-compose.yml`)</h2>
+            <p>This YAML file defines and orchestrates all the services that make up the VulnVerse application.</p>
+            <h3>File Location:</h3>
+            <p>This file is located in the root directory of your project: <code>D:\VULNverse\vulnverse\docker-compose.yml</code></p>
+            <h3>Content:</h3>
+            <pre><code class="language-yaml">version: '3.8'
+
+services:
+  postgres:
+    image: postgres
+    container_name: vulnverse-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adityA10!
+      POSTGRES_DB: vulnverse_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  openvpn:
+    image: kylemanna/openvpn
+    container_name: openvpn_server
+    ports:
+      - "1194:1194/udp"
+    volumes:
+      - ./openvpn-data:/etc/openvpn
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: vulnverse-backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://admin:adityA10!@postgres:5432/vulnverse_db
+      SECRET_KEY: your-secret-key  # Replace with a strong, unique secret key
+    depends_on:
+      - postgres
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Mount the Docker socket
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    container_name: vulnverse-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+</code></pre>
+            <h3>Explanation of Key Sections:</h3>
+            <ul>
+                <li><code>version: '3.8'</code>: Specifies the Docker Compose file format version.</li>
+                <li><code>services:</code>: Defines the individual containers that make up your application.
+                    <ul>
+                        <li><strong><code>postgres</code> service:</strong>
+                            <ul>
+                                <li><code>image: postgres</code>: Uses the official PostgreSQL Docker image.</li>
+                                <li><code>container_name: vulnverse-postgres</code>: Assigns a specific name to the container.</li>
+                                <li><code>environment:</code>: Sets environment variables for the PostgreSQL container (database user, password, database name).</li>
+                                <li><code>ports: - "5432:5432"</code>: Maps the container's port 5432 to the host machine's port 5432, allowing external tools (like <code>psql</code> or database clients) to connect.</li>
+                                <li><code>volumes: - postgres_data:/var/lib/postgresql/data</code>: Persists the PostgreSQL data to a named Docker volume (<code>postgres_data</code>) so data is not lost when the container is removed.</li>
+                                <li><code>restart: unless-stopped</code>: Automatically restarts the container unless it's explicitly stopped.</li>
+                            </ul>
+                        </li>
+                        <li><strong><code>openvpn</code> service:</strong>
+                            <ul>
+                                <li><code>image: kylemanna/openvpn</code>: Uses a pre-built OpenVPN server image.</li>
+                                <li><code>container_name: openvpn_server</code>: Assigns a specific name.</li>
+                                <li><code>ports: - "1194:1194/udp"</code>: Maps the OpenVPN UDP port.</li>
+                                <li><code>volumes: - ./openvpn-data:/etc/openvpn</code>: Mounts a local directory (<code>openvpn-data</code>) to persist OpenVPN configuration and certificates.</li>
+                                <li><code>cap_add: - NET_ADMIN</code>: Grants the container network administration capabilities, necessary for OpenVPN.</li>
+                                <li><code>restart: unless-stopped</code>: Automatically restarts.</li>
+                            </ul>
+                        </li>
+                        <li><strong><code>backend</code> service:</strong>
+                            <ul>
+                                <li><code>build: { context: ., dockerfile: Dockerfile.backend }</code>: Tells Docker Compose to build the image for this service using the <code>Dockerfile.backend</code> located in the current directory.</li>
+                                <li><code>container_name: vulnverse-backend</code>: Assigns a specific name.</li>
+                                <li><code>ports: - "8000:8000"</code>: Maps the backend's container port 8000 to the host's port 8000.</li>
+                                <li><code>environment:</code>:
+                                    <ul>
+                                        <li><code>DATABASE_URL: postgresql://admin:adityA10!@postgres:5432/vulnverse_db</code>:
+                                            <ul>
+                                                <li><strong>Static Change:</strong> This URL configures the backend to connect to the <code>postgres</code> service (by its service name) on port 5432 within the Docker Compose network.</li>
+                                                <li>The credentials (<code>admin:adityA10!</code>) are hardcoded here. In a production environment, these should be managed more securely (e.g., Docker secrets, environment variables from a non-version-controlled <code>.env</code> file).</li>
+                                            </ul>
+                                        </li>
+                                        <li><code>SECRET_KEY: your-secret-key</code>:
+                                            <ul>
+                                                <li><strong>Static Change:</strong> This is a placeholder. You **must** replace <code>your-secret-key</code> with a strong, unique secret key for JWT signing in a production environment.</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li><code>depends_on: - postgres</code>: Ensures the <code>postgres</code> service starts and is running before the <code>backend</code> service attempts to start.</li>
+                                <li><code>volumes: - /var/run/docker.sock:/var/run/docker.sock</code>:
+                                    <ul>
+                                        <li><strong>Static Change:</strong> This is crucial for the backend to manage other Docker containers. It mounts the Docker daemon's socket from the host machine into the <code>backend</code> container. This gives the <code>backend</code> container the ability to issue Docker commands to the host's Docker daemon.</li>
+                                        <li><strong>Security Note:</strong> This grants the container root access to your Docker daemon. Use with caution and only for trusted applications.</li>
+                                    </ul>
+                                </li>
+                                <li><code>restart: unless-stopped</code>: Automatically restarts.</li>
+                            </ul>
+                        </li>
+                        <li><strong><code>frontend</code> service:</strong>
+                            <ul>
+                                <li><code>build: { context: ./frontend, dockerfile: Dockerfile.frontend }</code>: Builds the image using the <code>Dockerfile.frontend</code> located in the <code>frontend</code> subdirectory.</li>
+                                <li><code>container_name: vulnverse-frontend</code>: Assigns a specific name.</li>
+                                <li><code>ports: - "8080:80"</code>:
+                                    <ul>
+                                        <li><strong>Static Change:</strong> Maps the frontend container's port 80 (where Nginx serves the app) to host machine's port 8080. This avoids conflicts if port 80 on your host is already in use. You would access the frontend at <code>http://localhost:8080</code>.</li>
+                                    </ul>
+                                </li>
+                                <li><code>depends_on: - backend</code>: Ensures the <code>backend</code> service starts before the <code>frontend</code>.</li>
+                                <li><code>restart: unless-stopped</code>: Automatically restarts.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li><code>volumes:</code>: Defines named Docker volumes for data persistence.
+                    <ul>
+                        <li><code>postgres_data:</code>: The named volume used by the <code>postgres</code> service.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section id="other-file-changes">
+            <h2>6. Other Important File Changes</h2>
+            <h3>`requirements.txt` (Root Directory)</h3>
+            <p>Modified to ensure compatible Python dependencies for the backend, specifically addressing issues with <code>passlib</code> and <code>bcrypt</code>.</p>
+            <pre><code class="language-text">fastapi
+uvicorn[standard]
+SQLAlchemy
+alembic
+psycopg2-binary
+pydantic
+passlib==1.7.4
+bcrypt==4.0.1
+cffi==1.15.1
+python-jose[cryptography]
+docker
+python-multipart
+</code></pre>
+            <ul>
+                <li><code>passlib==1.7.4</code>: Pinned version for stability.</li>
+                <li><code>bcrypt==4.0.1</code>: Explicitly added and pinned version to resolve <code>AttributeError: module 'bcrypt' has no attribute '__about__'</code>.</li>
+                <li><code>cffi==1.15.1</code>: Explicitly added and pinned version, as it's a common dependency for <code>bcrypt</code>.</li>
+                <li>Removed <code>[bcrypt]</code> from <code>passlib</code> as <code>bcrypt</code> is now explicitly listed.</li>
+            </ul>
+
+            <h3>`frontend/package.json` (`frontend/` Directory)</h3>
+            <p>Modified to include necessary frontend dependencies for charting.</p>
+            <pre><code class="language-json">{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "chart.js": "^4.4.3",
+    "jwt-decode": "^4.0.0",
+    "nvm": "^0.0.4",
+    "react": "^19.1.1",
+    "react-chartjs-2": "^5.2.0",
+    "react-dom": "^19.1.1",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.7.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^9.32.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "vite": "^5.0.0"
+  }
+}
+</code></pre>
+            <ul>
+                <li>Added <code>"chart.js": "^4.4.3"</code> to <code>dependencies</code>.</li>
+                <li>Added <code>"react-chartjs-2": "^5.2.0"</code> to <code>dependencies</code>. These were missing and caused frontend build failures.</li>
+            </ul>
+
+            <h3>`frontend/src/services/api.js` (`frontend/src/services/` Directory)</h3>
+            <p>Modified to correctly configure the API base URL for the frontend when running in Docker.</p>
+            <pre><code class="language-javascript">import axios from 'axios';
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+});
+
+export default api;
+</code></pre>
+            <ul>
+                <li><strong>Static Change:</strong> <code>baseURL: import.meta.env.VITE_API_BASE_URL,</code>: Changed from hardcoded <code>http://127.0.0.1:8000</code> to use the <code>VITE_API_BASE_URL</code> environment variable. This allows Nginx to proxy API requests correctly within the Docker environment.</li>
+            </ul>
+        </section>
+
+        <section id="running-the-application">
+            <h2>7. Building and Running the Dockerized Application</h2>
+            <p>Once all the Dockerfiles, <code>nginx.conf</code>, and <code>docker-compose.yml</code> are in place, you can build and run your entire application stack.</p>
+            <h3>Prerequisites:</h3>
+            <ul>
+                <li>Docker Desktop (Windows/macOS) or Docker Engine (Linux) installed and running.</li>
+                <li>Your project files are in the correct locations.</li>
+            </ul>
+            <h3>Steps:</h3>
+            <ol>
+                <li><strong>Clean up (Recommended for a fresh start):</strong>
+                    <p>It's often best to start with a clean slate to avoid conflicts from previous runs or partial builds.</p>
+                    <pre><code class="language-bash">docker stop $(docker ps -aq) # Stop all running containers
+docker rm $(docker ps -aq)   # Remove all stopped containers
+docker network prune -f      # Remove all unused networks
+docker volume prune -f       # Remove all unused volumes (WARNING: This deletes all data in volumes!)
+</code></pre>
+                    <p><strong>WARNING:</strong> <code>docker volume prune -f</code> will delete all data in your PostgreSQL database if it's stored in a Docker volume. Only use this if you want to completely reset your database.</p>
+                </li>
+                <li><strong>Restart Docker Desktop/Daemon:</strong>
+                    <p>Sometimes, a fresh restart of the Docker service can resolve underlying network or daemon issues.</p>
+                </li>
+                <li><strong>Navigate to your project's root directory:</strong>
+                    <pre><code class="language-bash">cd D:\VULNverse\vulnverse
+</code></pre>
+                </li>
+                <li><strong>Build and Run the application:</strong>
+                    <p>This command will build the Docker images for your backend and frontend (if they haven't been built or if changes are detected), and then start all the services defined in <code>docker-compose.yml</code> in detached mode (in the background).</p>
+                    <pre><code class="language-bash">docker-compose up --build -d
+</code></pre>
+                </li>
+                <li><strong>Verify containers are running:</strong>
+                    <pre><code class="language-bash">docker ps
+</code></pre>
+                    <p>You should see <code>vulnverse-postgres</code>, <code>openvpn_server</code>, <code>vulnverse-backend</code>, and <code>vulnverse-frontend</code> listed with a "Up" status.</p>
+                </li>
+                <li><strong>Apply Alembic Migrations (for database schema updates):</strong>
+                    <p>After the <code>backend</code> container is running, you need to apply any pending database migrations. This command executes Alembic inside the <code>vulnverse-backend</code> container.</p>
+                    <pre><code class="language-bash">docker exec vulnverse-backend alembic upgrade head
+</code></pre>
+                </li>
+                <li><strong>Access the Application:</strong>
+                    <ul>
+                        <li><strong>Frontend:</strong> Open your web browser and go to <code>http://localhost:8080</code></li>
+                        <li><strong>Backend API:</strong> The backend API is internally accessible to the frontend. If you need to access it directly for testing (e.g., with Postman), it's exposed on <code>http://localhost:8000</code>.</li>
+                    </ul>
+                </li>
+            </ol>
+        </section>
+
+        <section id="troubleshooting-docker">
+            <h2>8. Common Docker Troubleshooting</h2>
+            <ul>
+                <li><strong><code>db: forward host lookup failed: Unknown host</code> or <code>502 Bad Gateway</code>:</strong>
+                    <ul>
+                        <li>This usually means the backend cannot connect to the database.</li>
+                        <li>Ensure all services are defined in the same <code>docker-compose.yml</code> and started together.</li>
+                        <li>Verify the <code>DATABASE_URL</code> in <code>docker-compose.yml</code> and <code>Dockerfile.backend</code>'s <code>CMD</code> uses the correct service name (<code>postgres</code>).</li>
+                        <li>Perform a full Docker cleanup (<code>docker stop/rm/prune</code>) and restart Docker Desktop/Daemon.</li>
+                    </ul>
+                </li>
+                <li><strong><code>port is in use</code> error:</strong>
+                    <ul>
+                        <li>Another application on your host machine is using the port Docker is trying to map (e.g., 80 or 5432).</li>
+                        <li>Stop the conflicting application or change the host port mapping in <code>docker-compose.yml</code> (e.g., <code>"8080:80"</code> for frontend).</li>
+                    </ul>
+                </li>
+                <li><strong>Frontend build fails (`npm run build` exit code 1):</strong>
+                    <ul>
+                        <li>Check <code>frontend/package.json</code> for missing dependencies (e.g., <code>chart.js</code>, <code>react-chartjs-2</code>).</li>
+                        <li>Ensure <code>ENV VITE_API_BASE_URL=/api</code> is set in <code>Dockerfile.frontend</code>.</li>
+                        <li>Ensure <code>ENV NODE_OPTIONS=--max_old_space_size=4096</code> is set in <code>Dockerfile.frontend</code> for memory-intensive builds.</li>
+                        <li>Verify network connectivity during build (<code>apt-get update</code> or <code>npm install</code> failures).</li>
+                    </ul>
+                </li>
+                <li><strong>Backend build fails (`apt-get update` exit code 100):</strong>
+                    <ul>
+                        <li>This is often a network connectivity or DNS resolution issue within the Docker build environment.</li>
+                        <li>Ensure your host machine has internet access.</li>
+                        <li>Check Docker Desktop/Daemon DNS settings (e.g., use 8.8.8.8).</li>
+                        <li>Temporarily disable firewalls/VPNs.</li>
+                        <li>Restart Docker Desktop/Daemon.</li>
+                        <li>Ensure the base image is not End-of-Life (e.g., changed from `buster` to `bullseye`).</li>
+                    </ul>
+                </li>
+                <li><strong>`AttributeError: module 'bcrypt' has no attribute '__about__'` (Backend):</strong>
+                    <ul>
+                        <li>Version incompatibility between <code>passlib</code> and <code>bcrypt</code>.</li>
+                        <li>Pin specific versions in <code>requirements.txt</code> (e.g., <code>passlib==1.7.4</code>, <code>bcrypt==4.0.1</code>, <code>cffi==1.15.1</code>).</li>
+                    </ul>
+                </li>
+                <li><strong>`Error while fetching server API version: ('Connection aborted.', FileNotFoundError(2, 'No such file or directory'))` (Backend):</strong>
+                    <ul>
+                        <li>The backend container cannot access the Docker daemon socket on the host.</li>
+                        <li>Mount the Docker socket in <code>docker-compose.yml</code> for the backend service: <code>volumes: - /var/run/docker.sock:/var/run/docker.sock</code>.</li>
+                        <li><strong>Security Note:</strong> This grants the container root access to your Docker daemon. Use with caution.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section id="static-changes-recap">
+            <h2>9. Recap of "Static Changes" (Hardcoded Values / Docker-Specific Configurations)</h2>
+            <p>These are specific values or configurations introduced to make the application work correctly within the Docker environment.</p>
+            <ul>
+                <li><strong>`Dockerfile.backend` (`CMD` instruction):</strong>
+                    <ul>
+                        <li><code>nc -z postgres 5432</code>: Uses <code>postgres</code> as the service name for the database.</li>
+                    </ul>
+                </li>
+                <li><strong>`Dockerfile.frontend` (`ENV` instructions):</strong>
+                    <ul>
+                        <li><code>ENV VITE_API_BASE_URL=/api</code>: Sets the API base URL for the frontend.</li>
+                    </ul>
+                </li>
+                <li><strong>`frontend/nginx.conf` (`location /api/` block):</strong>
+                    <ul>
+                        <li><code>proxy_pass http://backend:8000/</code>: Proxies API requests to the <code>backend</code> service.</li>
+                    </ul>
+                </li>
+                <li><strong>`docker-compose.yml` (`backend` service `environment`):</strong>
+                    <ul>
+                        <li><code>DATABASE_URL: postgresql://admin:adityA10!@postgres:5432/vulnverse_db</code>: Uses <code>postgres</code> as the database hostname and includes hardcoded credentials.</li>
+                        <li><code>SECRET_KEY: your-secret-key</code>: Placeholder for a JWT secret key.</li>
+                    </ul>
+                </li>
+                <li><strong>`docker-compose.yml` (`backend` service `volumes`):</strong>
+                    <ul>
+                        <li><code>- /var/run/docker.sock:/var/run/docker.sock</code>: Mounts the Docker daemon socket.</li>
+                    </ul>
+                </li>
+                <li><strong>`docker-compose.yml` (`frontend` service `ports`):</strong>
+                    <ul>
+                        <li><code>- "8080:80"</code>: Maps frontend container port 80 to host port 8080.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section id="conclusion">
+            <h2>10. Conclusion</h2>
+            <p>This guide should provide a solid foundation for understanding the Dockerization of the VulnVerse application. By following these steps, you can reliably build and run the entire stack in a consistent and isolated environment. Remember to always consider security implications, especially when mounting the Docker socket or handling sensitive credentials.</p>
+        </section>
+    </div>
+</body>
+</html>

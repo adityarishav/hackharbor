@@ -1,0 +1,91 @@
+/* General App Layout */
+.app-layout {
+  display: flex;
+  background-color: #111315; /* Dark background for the whole app */
+  color: #c5c6c7;
+  min-height: 100vh;
+}
+
+.main-content {
+  margin-left: 240px; /* Same as sidebar width */
+  padding: 2rem;
+  width: calc(100% - 240px);
+  overflow-y: auto;
+}
+
+/* General Styling */
+h1, h2, h3, h4, h5, h6 {
+  color: #ffffff;
+}
+
+/* Styling for containers like in Dashboard, Login, etc. */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #1a1d21; /* Slightly lighter than the body */
+  border-radius: 8px;
+  border: 1px solid #2a2e33;
+}
+
+/* Button Styling */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.btn-primary {
+  background-color: #6a44ff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #5a37cc;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Form Styling */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #c5c6c7;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  background-color: #2a2e33;
+  border: 1px solid #454a50;
+  border-radius: 5px;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #6a44ff;
+  box-shadow: 0 0 0 2px rgba(106, 68, 255, 0.5);
+}
+
+/* Link styling */
+a {
+  color: #6a44ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

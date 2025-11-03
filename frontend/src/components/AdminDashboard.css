@@ -1,0 +1,76 @@
+/* AdminDashboard.css */
+
+.admin-container {
+    padding: 2rem;
+}
+
+.admin-header {
+    margin-bottom: 2rem;
+}
+
+.admin-header h1 {
+    color: #ffffff;
+    font-size: 2rem;
+    border-bottom: 2px solid #6a44ff;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.admin-navigation {
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.admin-section {
+    background-color: #1a1d21;
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #2a2e33;
+}
+
+.admin-section h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #e0e0e0;
+    font-size: 1.5rem;
+    border-bottom: 1px solid #2a2e33;
+    padding-bottom: 0.75rem;
+}
+
+.machines-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #c5c6c7;
+}
+
+.machines-table th,
+.machines-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #2a2e33;
+}
+
+.machines-table th {
+    background-color: #2a2e33;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.machines-table tbody tr:hover {
+    background-color: #25282c;
+}
+
+.no-machines {
+    text-align: center;
+    padding: 2rem;
+    font-style: italic;
+    color: #8a8d90;
+}
+
+.machines-table .deleted-machine {
+    opacity: 0.6;
+    text-decoration: line-through;
+    background-color: #333; /* Slightly darker background for deleted rows */
+}

@@ -1,0 +1,2336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulnVerse Project: In-Depth Study Guide</title>
+    <link rel="stylesheet" href="study_guide_theme.css">
+</head>
+<body>
+    <header>
+        <h1>VulnVerse Project: In-Depth Study Guide</h1>
+        <p>A Comprehensive Journey Through Full-Stack Development, Containerization, and Networking</p>
+        <div class="theme-switch-wrapper">
+            <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" />
+                <div class="slider">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </div>
+            </label>
+        </div>
+    </header>
+
+    <nav>
+        <ul id="table-of-contents">
+            <li><a href="#project-commands">I. Project Commands</a></li>
+            <li><a href="#introduction">II. Introduction</a></li>
+            <li><a href="#core-technologies">III. Core Technologies</a>
+                <ul>
+                    <li><a href="#fastapi">3.1. FastAPI</a></li>
+                    <li><a href="#sqlalchemy-alembic">3.2. SQLAlchemy &amp; Alembic</a></li>
+                    <li><a href="#docker">3.3. Docker</a></li>
+                    <li><a href="#openvpn">3.4. OpenVPN</a></li>
+                    <li><a href="#react-vite">3.5. React &amp; Vite</a></li>
+                </ul>
+            </li>
+            <li><a href="#phase-breakdown">IV. Development Breakdown</a>
+                <ul>
+                    <li><a href="#phase1">4.1. Phase 1</a></li>
+                    <li><a href="#phase2">4.2. Phase 2</a></li>
+                    <li><a href="#phase3">4.3. Phase 3</a></li>
+                    <li><a href="#phase4">4.4. Phase 4</a></li>
+                    <li><a href="#phase5">4.5. Phase 5</a></li>
+                </ul>
+            </li>
+            <li><a href="#update-2-0">V. Update 2.0</a></li>
+            <li><a href="#integration-flow">VI. Integration Flow</a></li>
+            <li><a href="#troubleshooting">VII. Troubleshooting</a></li>
+            <li><a href="#conclusion">VIII. Conclusion</a></li>
+        </ul>
+    </nav>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const themeToggle = document.getElementById('checkbox');
+            const body = document.body;
+
+            // 1. Theme Toggler
+            // Check for saved theme in local storage
+            if (localStorage.getItem('theme') === 'dark') {
+                body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            }
+
+            // Toggle theme on switch change
+            themeToggle.addEventListener('change', function () {
+                if (this.checked) {
+                    body.classList.add('dark-mode');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    body.classList.remove('dark-mode');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // 2. Active Nav Link Highlighting on Scroll
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('nav ul li a');
+
+            const observerOptions = {
+                root: null, // relative to the viewport
+                rootMargin: '0px',
+                threshold: 0.3 // 30% of the section must be visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+        <header>
+            <h1>VulnVerse Project: In-Depth Study Guide</h1>
+            <p>A Comprehensive Journey Through Full-Stack Development, Containerization, and Networking</p>
+            <div class="theme-switch-wrapper">
+                <label class="theme-switch" for="checkbox">
+                    <input type="checkbox" id="checkbox" />
+                    <div class="slider">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </div>
+                </label>
+            </div>
+        </header>
+        <section id="project-commands">
+            <h2>I. Project Commands: Start &amp; Stop</h2>
+            <p>This section provides the essential commands to start and stop all components of the VulnVerse project. Please open a <strong>NEW terminal window</strong> for each of the server processes (FastAPI and React) as they will occupy the terminal.</p>
+
+            <h3>How to Start Everything:</h3>
+            <ol>
+                <li>
+                    <h5>Start your PostgreSQL Database (if running in Docker):</h5>
+                    <pre><code>docker start vulnverse-postgres</code></pre>
+                    <p><em>(If you're using a local PostgreSQL installation, ensure its service is running.)</em></p>
+                </li>
+                <li>
+                    <h5>Start the OpenVPN Server (Docker Container):</h5>
+                    <pre><code>docker start openvpn_server</code></pre>
+                </li>
+                <li>
+                    <h5>Start the FastAPI Backend:</h5>
+                    <pre><code>D:\VULNverse\vulnverse\venv\Scripts\python.exe -m uvicorn main:app --reload</code></pre>
+                    <p><em>(Keep this terminal open and running.)</em></p>
+                </li>
+                <li>
+                    <h5>Start the React Frontend:</h5>
+                    <pre><code>cd D:\Think\vulnverse\frontend
+npm run dev</code></pre>
+                    <p><em>(Keep this terminal open and running.)</em></p>
+                </li>
+            </ol>
+
+            <h3>How to Stop Everything:</h3>
+            <p>To gracefully stop all components, run these commands in separate terminal windows:</p>
+            <ol>
+                <li>
+                    <h5>Stop the React Frontend:</h5>
+                    <p>In the terminal running <code>npm run dev</code>, press <code>Ctrl+C</code>.</p>
+                </li>
+                <li>
+                    <h5>Stop the FastAPI Backend:</h5>
+                    <p>In the terminal running <code>uvicorn main:app --reload</code>, press <code>Ctrl+C</code>.</p>
+                </li>
+                <li>
+                    <h5>Stop the OpenVPN Server (Docker Container):</h5>
+                    <pre><code>docker stop openvpn_server</code></pre>
+                </li>
+                <li>
+                    <h5>Stop your PostgreSQL Database (if running in Docker):</h5>
+                    <pre><code>docker stop vulnverse-postgres</code></pre>
+                    <p><em>(If you're using a local PostgreSQL installation, you would stop its service.)</em></p>
+                </li>
+            </ol>
+            <div class="section-navigation">
+                <a href="#project-commands" class="disabled">Previous Section</a>
+                <a href="#introduction">Next Section</a>
+            </div>
+        </section>
+
+        <section id="introduction">
+            <h2>II. Introduction &amp; Project Overview</h2>
+            <p>This document serves as a comprehensive study guide for the VulnVerse project, detailing every aspect of its development, from core technologies to intricate integrations and troubleshooting.</p>
+            <p><strong>Project Goal:</strong> To build a HackTheBox-style platform for ethical hacking practice. This platform allows users to connect to isolated, vulnerable machines (labs) via a VPN, find flags, and submit them through a central web interface.</p>
+
+            <h3>Core Architectural Components:</h3>
+            <ul>
+                <li><strong>The Web Application (Full-Stack):</strong>
+                    <ul>
+                        <li><strong>Frontend:</strong> A user-friendly web interface built with React, allowing users to register, log in, view available machines, start/stop them, download VPN configurations, and submit flags.</li>
+                        <li><strong>Backend:</strong> A robust API built with FastAPI (Python) that handles user management, machine provisioning, flag validation, and interaction with the underlying containerization and VPN systems.</li>
+                    </ul>
+                </li>
+                <li><strong>The Vulnerable Labs (Cybersecurity):</strong> Isolated and reproducible vulnerable machine environments powered by Docker. Each lab is a Docker container running a specific vulnerable application or system.</li>
+                <li><strong>The Network Layer (Networking &amp; Security):</strong> OpenVPN provides a secure tunnel for users to connect to the lab network, enabling them to access the vulnerable machines as if they were on the same local network.</li>
+            </ul>
+
+            <h3>Technology Stack:</h3>
+            <ul>
+                <li><strong>Frontend:</strong> React (JavaScript/JSX) with Vite (build tool).</li>
+                <li><strong>Backend:</strong> FastAPI (Python).</li>
+                <li><strong>Database:</strong> PostgreSQL.</li>
+                <li><strong>Containerization:</strong> Docker.</li>
+                <li><strong>VPN:</strong> OpenVPN (Dockerized).</li>
+            </ul>
+
+            <div class="visual-idea">
+                <h4>Visual Element Idea: High-Level Architecture Diagram</h4>
+                <p><strong>Diagram:</strong> A high-level architectural diagram showing the user's browser connecting to the React Frontend, which communicates with the FastAPI Backend. The Backend interacts with PostgreSQL (Database) and Docker (managing Vulnerable Labs and the OpenVPN Server). The OpenVPN Server then provides a tunnel for the user's VPN Client to access the Vulnerable Labs.</p>
+                <p><strong>Color Coding:</strong> Use different colors for Frontend (e.g., light blue), Backend (e.g., green), Database (e.g., yellow), Docker (e.g., red), and VPN (e.g., purple) components to clearly distinguish them.</p>
+            </div>
+            <div class="section-navigation">
+                <a href="#project-commands">Previous Section</a>
+                <a href="#core-technologies">Next Section</a>
+            </div>
+        </section>
+
+        <section id="core-technologies">
+            <h2>III. Core Technologies Explained (In-Depth)</h2>
+
+            <section id="fastapi">
+                <h3>3.1. FastAPI</h3>
+                <p><strong>What it is:</strong> FastAPI is a modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints. It's built on Starlette for the web parts and Pydantic for data parts.</p>
+
+                <h4>Why we chose it:</h4>
+                <ul>
+                    <li><strong>Performance:</strong> It's one of the fastest Python web frameworks, comparable to Node.js and Go.</li>
+                    <li><strong>Developer Experience:</strong> Excellent documentation, automatic interactive API documentation (Swagger UI and ReDoc), and strong type checking.</li>
+                    <li><strong>Asynchronous Support:</strong> Built for asynchronous programming (<code>async</code>/<code>await</code>), making it efficient for I/O-bound tasks like database queries and network requests.</li>
+                    <li><strong>Pydantic Integration:</strong> Seamlessly integrates with Pydantic for data validation, serialization, and deserialization, ensuring data integrity and reducing boilerplate code.</li>
+                    <li><strong>Dependency Injection:</strong> A powerful system for managing dependencies, making code modular and testable.</li>
+                </ul>
+
+                <h4>Key Features Used:</h4>
+                <ul>
+                    <li><strong>Pydantic Models:</strong> Used to define the structure and validation rules for request bodies and response models (e.g., <code>schemas.UserCreate</code>, <code>schemas.Machine</code>).</li>
+                    <li><strong>Path Operations:</strong> Decorators (<code>@app.post</code>, <code>@app.get</code>) to define API endpoints and their HTTP methods.</li>
+                    <li><strong>Dependency Injection (<code>Depends</code>):</strong> Used for database session management (<code>database.get_db</code>) and authentication (<code>auth.get_current_user</code>).</li>
+                    <li><strong><code>CORSMiddleware</code>:</strong> To handle Cross-Origin Resource Sharing, allowing the frontend (on a different origin) to communicate with the backend.</li>
+                </ul>
+
+                <div class="summary-note">
+                    <h4>Summary Note: FastAPI</h4>
+                    <p>FastAPI provides a robust, high-performance, and developer-friendly foundation for our backend API, leveraging Python's strengths and modern web development practices.</p>
+                </div>
+            </section>
+
+            <section id="sqlalchemy-alembic">
+                <h3>3.2. SQLAlchemy &amp; Alembic</h3>
+
+                <section id="sqlalchemy">
+                    <h4>3.2.1. SQLAlchemy</h4>
+                    <p><strong>What it is:</strong> SQLAlchemy is a comprehensive SQL toolkit and Object Relational Mapper (ORM) for Python. It provides a flexible and powerful way to interact with relational databases.</p>
+
+                    <h5>ORM vs. Core:</h5>
+                    <ul>
+                        <li><strong>SQLAlchemy ORM:</strong> Allows developers to work with database records as Python objects. You define Python classes that map to database tables, and SQLAlchemy handles the translation between Python objects and SQL queries. This is what we primarily used for <code>models.py</code>.</li>
+                        <li><strong>SQLAlchemy Core:</strong> Provides a lower-level, SQL-centric interface for building SQL expressions programmatically. It's useful for complex queries or when you need more direct control over the SQL.</li>
+                    </ul>
+
+                    <h5>Key Concepts Used:</h5>
+                    <ul>
+                        <li><strong><code>Base</code> (Declarative Base):</strong> A base class that our ORM models inherit from, linking them to the SQLAlchemy engine.</li>
+                        <li><strong><code>Column</code>:</strong> Defines a database column, specifying its type (e.g., <code>Integer</code>, <code>String</code>, <code>DateTime</code>) and properties (e.g., <code>primary_key</code>, <code>unique</code>, <code>index</code>).</li>
+                        <li><strong><code>relationship</code>:</strong> Defines relationships between models (e.g., one-to-many, many-to-many), allowing easy navigation between related objects (e.g., <code>User.submissions</code>).</li>
+                        <li><strong><code>Session</code>:</strong> The primary way to interact with the database. It represents a "staging zone" for all the objects loaded or associated with it. Changes made to objects within a session are only persisted to the database when the session is committed.</li>
+                        <li><strong><code>Engine</code>:</strong> The starting point for any SQLAlchemy application. It's a factory for connections to the database.</li>
+                    </ul>
+
+                    <div class="summary-note">
+                        <h4>Summary Note: SQLAlchemy</h4>
+                        <p>SQLAlchemy provides a powerful and flexible way to manage our database schema and interact with PostgreSQL using Python objects, abstracting away raw SQL.</p>
+                    </div>
+                </section>
+
+                <section id="alembic">
+                    <h4>3.2.2. Alembic</h4>
+                    <p><strong>What it is:</strong> Alembic is a lightweight database migration tool for SQLAlchemy. It helps manage changes to the database schema over time in a version-controlled manner. When your application's data models change (e.g., adding a new column, creating a new table), Alembic generates scripts to apply these changes to your database.</p>
+
+                    <h5>Migration Philosophy:</h5>
+                    <ul>
+                        <li><strong>Version Control for Database:</strong> Just like code, database schemas evolve. Alembic allows you to track these changes and apply them reliably across different environments (development, staging, production).</li>
+                        <li><strong><code>revision</code>:</strong> A single change to the database schema. Each revision is a Python script that contains <code>upgrade()</code> and <code>downgrade()</code> functions.</li>
+                        <li><strong><code>upgrade()</code>:</strong> Contains the SQL operations to apply the schema change (e.g., <code>op.create_table</code>, <code>op.add_column</code>).</li>
+                        <li><strong><code>downgrade()</code>:</strong> Contains the SQL operations to revert the schema change.</li>
+                    </ul>
+
+                    <h5>Key Commands Used:</h5>
+                    <ul>
+                        <li><strong><code>alembic init &lt;directory&gt;</code>:</strong> Initializes Alembic in a project, creating the <code>alembic</code> directory and <code>alembic.ini</code> configuration file.</li>
+                        <li><strong><code>alembic revision --autogenerate -m "message"</code>:</strong>
+                            <ul>
+                                <li><strong>Purpose:</strong> Automatically detects changes between your SQLAlchemy models (<code>models.py</code>) and the current state of your database. It then generates a new migration script (<code>.py</code> file in <code>alembic/versions/</code>) with <code>upgrade()</code> and <code>downgrade()</code> functions populated with the detected changes.</li>
+                                <li><strong><code>--autogenerate</code>:</strong> The flag that enables automatic detection of schema differences.</li>
+                                <li><strong><code>-m "message"</code>:</strong> A descriptive message for the migration. <strong>Crucially, for Windows command line, messages with spaces must be enclosed in quotes and often benefit from underscores instead of spaces (e.g., <code>"Create_initial_tables"</code>) to avoid parsing issues.</strong></li>
+                            </ul>
+                        </li>
+                        <li><strong><code>alembic upgrade head</code>:</strong>
+                            <ul>
+                                <li><strong>Purpose:</strong> Applies all pending migrations up to the latest (<code>head</code>) revision to the database. This executes the <code>upgrade()</code> functions of the migration scripts.</li>
+                            </ul>
+                        </li>
+                        <li><strong><code>alembic downgrade -1</code> (or <code>base</code>):</strong>
+                            <ul>
+                                <li><strong>Purpose:</strong> Reverts the last applied migration (<code>-1</code>) or all migrations (<code>base</code>). This executes the <code>downgrade()</code> functions.</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <div class="summary-note">
+                        <h4>Summary Note: Alembic</h4>
+                        <p>Alembic is essential for managing database schema evolution, ensuring that our database always matches our application's data models in a controlled and versioned manner.</p>
+                    </div>
+
+                    <div class="visual-idea">
+                        <h4>Visual Element Idea: Alembic Migration Flow</h4>
+                        <p><strong>Diagram:</strong> A timeline showing different Alembic revisions, with arrows indicating <code>upgrade</code> and <code>downgrade</code> operations. Show <code>models.py</code> feeding into <code>alembic revision --autogenerate</code>, and <code>alembic upgrade head</code> applying changes to PostgreSQL.</p>
+                        <p><strong>Color Coding:</strong> Different colors for <code>models.py</code> (e.g., orange), Alembic scripts (e.g., light green), and the PostgreSQL database (e.g., dark blue).</p>
+                    </div>
+                </section>
+            </section>
+
+            <section id="docker">
+                <h3>3.3. Docker</h3>
+                <p><strong>What it is:</strong> Docker is an open-source platform that automates the deployment, scaling, and management of applications using containerization. Containers are lightweight, portable, and self-sufficient units that package an application and all its dependencies (code, runtime, system tools, libraries, settings) into a single, isolated environment.</p>
+
+                <h4>Why we chose it:</h4>
+                <ul>
+                    <li><strong>Isolation:</strong> Each vulnerable machine runs in its own container, preventing interference between labs and from the host system.</li>
+                    <li><strong>Reproducibility:</strong> Labs can be easily recreated on any system with Docker, ensuring consistent environments for all players.</li>
+                    <li><strong>Portability:</strong> Containers can be moved and run across different environments (development, testing, production) without issues.</li>
+                    <li><strong>Efficiency:</strong> Containers share the host OS kernel, making them much lighter and faster to start than traditional virtual machines.</li>
+                </ul>
+
+                <h4>3.3.1. Fundamental Concepts:</h4>
+                <ul>
+                    <li><strong>Image:</strong> A lightweight, standalone, executable package that includes everything needed to run a piece of software, including the code, a runtime, libraries, environment variables, and config files. Images are built from a <code>Dockerfile</code>. Think of an image as a blueprint or a template.</li>
+                    <li><strong>Container:</strong> A runnable instance of an image. When you run an image, it becomes a container. Containers are isolated from each other and from the host system. Think of a container as a running instance of the blueprint.</li>
+                    <li><strong>Dockerfile:</strong> A text file that contains a set of instructions for building a Docker image. Each instruction creates a layer in the image.
+                        <ul>
+                            <li><strong><code>FROM</code>:</strong> Specifies the base image (e.g., <code>python:3.8-slim</code>).</li>
+                            <li><strong><code>WORKDIR</code>:</strong> Sets the working directory inside the container.</li>
+                            <li><strong><code>COPY</code>:</strong> Copies files from the host to the container.</li>
+                            <li><strong><code>RUN</code>:</strong> Executes commands during the image build process (e.g., <code>pip install Flask</code>).</li>
+                            <li><strong><code>CMD</code>:</strong> Specifies the default command to run when the container starts.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Volume:</strong> A mechanism for persisting data generated by and used by Docker containers. Volumes are stored on the host filesystem, managed by Docker, and are independent of the container's lifecycle. This is crucial for data that needs to survive container restarts or removals (e.g., OpenVPN configuration).</li>
+                    <li><strong>Network:</strong> Docker provides networking capabilities to allow containers to communicate with each other and with the host.</li>
+                </ul>
+
+                <h4>3.3.2. Docker Commands (Detailed):</h4>
+                <ul>
+                    <li><strong><code>docker build -t &lt;image_name&gt;:&lt;tag&gt; &lt;path&gt;</code>:</strong>
+                        <ul>
+                            <li><strong>Purpose:</strong> Builds a Docker image from a <code>Dockerfile</code>.</li>
+                            <li><strong><code>-t &lt;image_name&gt;:&lt;tag&gt;</code>:</strong> Assigns a name and optional tag (version) to the image (e.g., <code>vuln-app:latest</code>).</li>
+                            <li><strong><code>&lt;path&gt;</code>:</strong> The path to the build context (usually the directory containing the <code>Dockerfile</code> and application code). A <code>.</code> means the current directory.</li>
+                            <li><strong>Example:</strong> <pre><code>docker build -t vuln-app:latest .</code></pre></li>
+                            <li><strong>How it works:</strong> Docker reads the <code>Dockerfile</code> instruction by instruction, executing each one and creating a new layer in the image. Layers are cached, making subsequent builds faster.</li>
+                        </ul>
+                    </li>
+                    <li><strong><code>docker run [OPTIONS] &lt;image_name&gt; [COMMAND] [ARG...]</code>:</strong>
+                        <ul>
+                            <li><strong>Purpose:</strong> Creates and starts a new container from a Docker image.</li>
+                            <li><strong><code>-d</code> (detached mode):</strong> Runs the container in the background.</li>
+                            <li><strong><code>-p &lt;host_port&gt;:&lt;container_port&gt;[/protocol]</code> (port mapping):</strong> Maps a port on the host machine to a port inside the container.
+                                <ul>
+                                    <li><strong>Example:</strong> <code>-p 8080:8080</code> maps host port 8080 to container port 8080.</li>
+                                    <li><strong>Example:</strong> <code>-p 1194:1194/udp</code> maps host UDP port 1194 to container UDP port 1194.</li>
+                                </ul>
+                            </li>
+                            <li><strong><code>--name &lt;container_name&gt;</code>:</strong> Assigns a specific name to the container for easier management.</li>
+                            <li><strong><code>-v &lt;host_path&gt;:&lt;container_path&gt;</code> (volume mount):</strong> Mounts a host directory or a named volume into the container.
+                                <ul>
+                                    <li><strong>Example:</strong> <pre><code>-v D:/Think/vulnverse/openvpn-data:/etc/openvpn</code></pre> mounts the <code>openvpn-data</code> directory from the host into <code>/etc/openvpn</code> inside the container.</li>
+                                </ul>
+                            </li>
+                            <li><strong><code>--network &lt;network_name&gt;</code>:</strong> Connects the container to a specific Docker network.</li>
+                            <li><strong><code>--cap-add=NET_ADMIN</code>:</strong> Grants the container additional network administration capabilities (often needed for VPN servers).</li>
+                            <li><strong><code>--rm</code>:</strong> Automatically removes the container when it exits.</li>
+                            <li><strong><code>--log-driver=none</code>:</strong> Disables logging for the container (useful for background processes that generate a lot of output).</li>
+                            <li><strong><code>-it</code> (interactive/TTY):</strong> Allocates a pseudo-TTY and keeps stdin open, allowing interaction with the container (used for <code>ovpn_initpki</code> where user input is needed).</li>
+                            <li><strong>Example:</strong> <pre><code>docker run -v D:/Think/vulnverse/openvpn-data:/etc/openvpn -d -p 1194:1194/udp --cap-add=NET_ADMIN --network vulnverse_network --name openvpn_server kylemanna/openvpn</code></pre></li>
+                        </ul>
+                    </li>
+                    <li><strong><code>docker stop &lt;container_name_or_id&gt;</code>:</strong>
+                        <ul>
+                            <li><strong>Purpose:</strong> Gracefully stops a running container.</li>
+                            <li><strong>Example:</strong> <pre><code>docker stop openvpn_server</code></pre></li>
+                        </ul>
+                    </li>
+                    <li><strong><code>docker rm &lt;container_name_or_id&gt;</code>:</strong>
+                        <ul>
+                            <li><strong>Purpose:</strong> Removes a stopped container.</li>
+                            <li><strong>Example:</strong> <pre><code>docker rm openvpn_server</code></pre></li>
+                        </ul>
+                    </li>
+                    <li><strong><code>docker network create [OPTIONS] &lt;network_name&gt;</code>:</strong>
+                        <ul>
+                            <li><strong>Purpose:</strong> Creates a new custom Docker network.</li>
+                            <li><strong><code>--subnet &lt;CIDR&gt;</code>:</strong> Specifies the IP subnet for the network (e.g., <code>172.20.0.0/16</code>).</li>
+                            <li><strong><code>--gateway &lt;IP_address&gt;</code>:</strong> Specifies the gateway IP address for the network (e.g., <code>172.20.0.1</code>).</li>
+                            <li><strong>Example:</strong> <pre><code>docker network create --subnet 172.20.0.0/16 --gateway 172.20.0.1 vulnverse_network</code></pre></li>
+                            <li><strong>How it works:</strong> Docker creates a new bridge interface on the host machine for this network. Containers connected to this network get IP addresses from the specified subnet and can communicate with each other.</li>
+                        </ul>
+                    </li>
+                    <li><strong><code>docker network inspect &lt;network_name_or_id&gt;</code>:</strong>
+                        <ul>
+                            <li><strong>Purpose:</strong> Displays detailed information about a Docker network, including its subnet, gateway, and connected containers with their IP addresses.</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h4>3.3.3. Networking in Docker (Deep Dive):</h4>
+                <p>Docker's networking allows containers to communicate with each other and the outside world.</p>
+
+                <h5>Bridge Networks (Default):</h5>
+                <ul>
+                    <li>When you install Docker, a default <code>bridge</code> network is created. Containers connected to this network can communicate with each other by IP address.</li>
+                    <li>They can also access the internet via NAT (Network Address Translation) through the Docker host.</li>
+                    <li><strong>Limitation:</strong> Containers on the default bridge network are not easily discoverable by name, and their IP addresses are dynamic.</li>
+                </ul>
+
+                <h5>Custom Bridge Networks (Our Choice: <code>vulnverse_network</code>):</h5>
+                <ul>
+                    <li><strong>Why we use them:</strong>
+                        <ul>
+                            <li><strong>Isolation:</strong> Provides better isolation than the default bridge.</li>
+                            <li><strong>Name Resolution:</strong> Containers on a custom bridge network can resolve each other by their container names (e.g., <code>ping my-vulnerable-app</code>).</li>
+                            <li><strong>Predictable IP Addressing:</strong> You can define a specific subnet and gateway, giving you more control over the IP address range of your lab machines. This is crucial for VPN routing.</li>
+                        </ul>
+                    </li>
+                    <li><strong>How it works:</strong>
+                        <ol>
+                            <li>When you create a custom bridge network (e.g., <code>vulnverse_network</code> with <code>172.20.0.0/16</code>), Docker creates a new virtual bridge interface on your host machine (e.g., <code>br-xxxxxxxxxxxx</code>).</li>
+                            <li>This bridge interface gets an IP address from the specified subnet (e.g., <code>172.20.0.1</code>, which acts as the gateway for containers on this network).</li>
+                            <li>When a container is attached to this network, it gets a virtual Ethernet interface connected to this bridge, and Docker assigns it an IP address from the network's subnet (e.g., <code>172.20.0.2</code>, <code>172.20.0.3</code>, etc.).</li>
+                            <li>Containers on the same custom bridge network can communicate directly using their assigned IP addresses or container names.</li>
+                            <li>Traffic from containers to the outside world (or other Docker networks) is routed through the host's network stack, often via NAT.</li>
+                        </ol>
+                    </li>
+                </ul>
+
+                <h5>Container-to-Container Communication:</h5>
+                <ul>
+                    <li>If containers are on the same Docker network (like our <code>vulnverse_network</code>), they can communicate directly using their IP addresses or, more conveniently, their container names (Docker's built-in DNS resolver handles this).</li>
+                </ul>
+
+                <h5>Host-to-Container Communication:</h5>
+                <ul>
+                    <li><strong>Port Mapping (<code>-p</code>):</strong> This is the primary way to expose a container's port to the host machine. For example, <code>-p 8080:8080</code> makes the container's port 8080 accessible on the host's port 8080.</li>
+                    <li><strong>Direct IP (within Docker network):</strong> The host can sometimes directly access containers on a custom bridge network if routing is set up, but port mapping is more common for specific services.</li>
+                </ul>
+
+                <h5>VPN Client to Container Communication (via OpenVPN Server):</h5>
+                <ul>
+                    <li>This is the most complex part. The OpenVPN server (running in its own Docker container) is also connected to the <code>vulnverse_network</code>.</li>
+                    <li>When a VPN client connects to the OpenVPN server, it gets an IP address from the VPN's internal subnet (e.g., <code>10.8.0.0/24</code>).</li>
+                    <li>The OpenVPN server is configured to route traffic destined for the <code>vulnverse_network</code> (e.g., <code>172.20.0.0/16</code>) through the VPN tunnel.</li>
+                    <li>The VPN client's operating system needs to know that traffic for <code>172.20.0.0/16</code> should go through the VPN tunnel. This is handled by <code>redirect-gateway def1</code> in the <code>.ovpn</code> file or by explicit <code>route</code> commands on the client.</li>
+                    <li>
+                        <div class="visual-idea">
+                            <h4>Visual Element Idea: VPN Client to Container Network Flow</h4>
+                            <p><strong>Diagram:</strong> A diagram showing the <code>vulnverse_network</code> with its subnet. Show the OpenVPN server container and a vulnerable machine container both connected to this network. Illustrate how the VPN client's traffic flows through the OpenVPN server to reach the vulnerable machine's IP within the <code>vulnverse_network</code>.</p>
+                            <p><strong>Color Coding:</strong> Different colors for host network (e.g., light gray), Docker bridge network (e.g., dark blue), VPN network (e.g., purple), and container IPs (e.g., light green).</p>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="summary-note">
+                    <h4>Summary Note: Docker</h4>
+                    <p>Docker provides powerful containerization and networking capabilities, allowing us to create isolated, reproducible, and interconnected lab environments. Custom bridge networks are key for controlled IP addressing and seamless integration with the OpenVPN server.</p>
+                </div>
+
+                <div class="visual-idea">
+                    <h4>Visual Element Idea: Detailed Docker Networking</h4>
+                    <p><strong>Diagram:</strong> A detailed diagram of Docker networking. Show the host machine, the Docker daemon, the <code>docker0</code> bridge (default), and our <code>vulnverse_network</code> bridge. Illustrate containers connected to each, showing IP ranges and how traffic flows between them and to the outside world.</p>
+                    <p><strong>Color Coding:</strong> Different colors for host OS (e.g., light gray), Docker daemon (e.g., dark gray), Docker networks (e.g., dark blue), and individual containers (e.g., light green).</p>
+                </div>
+            </section>
+
+            <section id="openvpn">
+                <h3>3.4. OpenVPN</h3>
+                <p><strong>What it is:</strong> OpenVPN is a free and open-source software application that implements virtual private network (VPN) techniques for creating secure point-to-point or site-to-site connections in routed or bridged configurations and remote access facilities. It's widely used for secure remote access.</p>
+
+                <h4>Why we chose it:</h4>
+                <ul>
+                    <li><strong>Security:</strong> Uses strong encryption (SSL/TLS) and authentication (certificates, keys).</li>
+                    <li><strong>Flexibility:</strong> Highly configurable to suit various network topologies.</li>
+                    <li><strong>Open Source:</strong> Transparent and auditable codebase.</li>
+                    <li><strong>Docker Integration:</strong> Easily deployable within a Docker container, simplifying setup and management.</li>
+                </ul>
+
+                <h4>Key Concepts Used:</h4>
+                <ul>
+                    <li><strong>PKI (Public Key Infrastructure):</strong> The foundation of OpenVPN's security. It involves:
+                        <ul>
+                            <li><strong>Certificate Authority (CA):</strong> A trusted entity that issues and revokes digital certificates. In our setup, we create our own CA.</li>
+                            <li><strong>Server Certificate:</strong> Issued by the CA to authenticate the OpenVPN server to clients.</li>
+                            <li><strong>Client Certificates:</strong> Issued by the CA to authenticate individual clients to the OpenVPN server. Each client gets a unique certificate and private key.</li>
+                        </ul>
+                    </li>
+                    <li><strong><code>kylemanna/openvpn</code> Docker Image:</strong> A popular and well-maintained Docker image that simplifies OpenVPN server setup. It bundles OpenVPN and Easy-RSA (a command-line utility for managing PKI).</li>
+                </ul>
+
+                <h4>Key Commands/Utilities from <code>kylemanna/openvpn</code> (Detailed):</h4>
+                <p>These commands are executed <em>inside</em> the <code>kylemanna/openvpn</code> container, typically by mounting a volume (<code>-v</code>) where the configuration and PKI data will be stored persistently.</p>
+                <ul>
+                    <li><strong><code>ovpn_genconfig -u udp://YOUR_VPN_SERVER_IP</code>:</strong>
+                        <ul>
+                            <li><strong>Purpose:</strong> Generates the initial OpenVPN server configuration file (<code>ovpn_env.sh</code> and <code>openvpn.conf</code>). It embeds the server's public IP/hostname into the configuration.</li>
+                            <li><strong><code>YOUR_VPN_SERVER_IP</code>:</strong> This is the IP address or hostname that clients will use to connect to your OpenVPN server.
+                                <ul>
+                                    <li>For local testing: <code>127.0.0.1</code> (only accessible from the same host).</li>
+                                    <li>For local network testing: Your host machine's WiFi IP (e.g., <code>192.168.1.100</code>).</li>
+                                    <li>For public access: Your server's public IP or domain name.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Example:</strong> <pre><code>docker run -v D:/Think/vulnverse/openvpn-data:/etc/openvpn --log-driver=none --rm kylemanna/openvpn ovpn_genconfig -u udp://127.0.0.1</code></pre></li>
+                        </ul>
+                    </li>
+                    <li><strong><code>ovpn_initpki</code>:</strong>
+                        <ul>
+                            <li><strong>Purpose:</strong> Initializes the Public Key Infrastructure (PKI). This creates the Certificate Authority (CA) certificate and key, and the server certificate and key.</li>
+                            <li><strong>Prompts:</strong> You will be prompted for a passphrase for the CA key (crucial to remember!) and a Common Name for the CA (e.g., <code>VulnVerse CA</code>).</li>
+                            <li><strong>Example:</strong> <pre><code>docker run -v D:/Think/vulnverse/openvpn-data:/etc/openvpn --log-driver=none --rm -it kylemanna/openvpn ovpn_initpki</code></pre> (The <code>-it</code> is important for interactive input).</li>
+                        </ul>
+                    </li>
+                    <li><strong><code>easyrsa build-client-full &lt;client_name&gt; [nopass]</code>:</strong>
+                        <ul>
+                            <li><strong>Purpose:</strong> Generates a client certificate and key, signed by your CA.</li>
+                            <li><strong><code>&lt;client_name&gt;</code>:</strong> A unique name for the client (e.g., <code>client</code>, <code>user1</code>).</li>
+                            <li><strong><code>nopass</code>:</strong> (Optional) If included, the client's private key will not be encrypted with a passphrase, making it easier for automated connections. If omitted, you'll be prompted for a passphrase for the client key.</li>
+                            <li><strong>Example:</strong> <pre><code>docker run -v D:/Think/vulnverse/openvpn-data:/etc/openvpn --log-driver=none --rm -it kylemanna/openvpn easyrsa build-client-full client nopass</code></pre></li>
+                        </ul>
+                    </li>
+                    <li><strong><code>ovpn_getclient &lt;client_name&gt;</code>:</strong>
+                        <ul>
+                            <li><strong>Purpose:</strong> Generates a complete OpenVPN client configuration file (<code>.ovpn</code> file) for the specified client. This file bundles the client certificate, client key, CA certificate, and server configuration details into a single file.</li>
+                            <li><strong>Example:</strong> <pre><code>docker run -v D:/Think/vulnverse/openvpn-data:/etc/openvpn --log-driver=none --rm kylemanna/openvpn ovpn_getclient client &gt; D:/Think/vulnverse/openvpn-data/client.ovpn</code></pre> (The <code>&gt;</code> redirects the output to a file on the host).</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="summary-note">
+                    <h4>Summary Note: OpenVPN</h4>
+                    <p>OpenVPN provides the secure network access layer for our platform. Using its Docker image simplifies the complex PKI and server setup, allowing us to generate client configurations that enable players to connect to the lab network.</p>
+                </div>
+
+                <div class="visual-idea">
+                    <h4>Visual Element Idea: OpenVPN PKI Generation Flow</h4>
+                    <p><strong>Diagram:</strong> A flowchart illustrating the PKI generation process: CA creation -&gt; Server Cert creation -&gt; Client Cert creation. Show how <code>ovpn_genconfig</code>, <code>ovpn_initpki</code>, <code>easyrsa build-client-full</code>, and <code>ovpn_getclient</code> fit into this.</p>
+                    <p><strong>Color Coding:</strong> Different colors for CA (e.g., dark red), Server (e.g., dark green), and Client (e.g., dark blue) components.</p>
+                </div>
+            </section>
+
+            <section id="react-vite">
+                <h3>3.5. React &amp; Vite</h3>
+
+                <h4>3.5.1. React</h4>
+                <p><strong>What it is:</strong> React is a JavaScript library for building user interfaces. It allows developers to create complex UIs from small, isolated pieces of code called "components."</p>
+
+                <h4>Why we chose it:</h4>
+                <ul>
+                    <li><strong>Component-Based:</strong> Encourages modular and reusable UI components, making the codebase organized and maintainable.</li>
+                    <li><strong>Declarative:</strong> You describe what the UI should look like, and React handles updating the DOM efficiently.</li>
+                    <li><strong>Virtual DOM:</strong> React uses a virtual representation of the UI to optimize updates, leading to fast and responsive applications.</li>
+                    <li><strong>Rich Ecosystem:</strong> A vast community, libraries (like <code>axios</code>, <code>react-router-dom</code>), and tools.</li>
+                </ul>
+
+                <h4>Key Concepts Used:</h4>
+                <ul>
+                    <li><strong>Components:</strong> Reusable UI building blocks (e.g., <code>Login.jsx</code>, <code>Register.jsx</code>, <code>Dashboard.jsx</code>).</li>
+                    <li><strong>JSX:</strong> A syntax extension for JavaScript that allows you to write HTML-like code directly within your JavaScript files.</li>
+                    <li><strong>State (<code>useState</code> Hook):</strong> Allows functional components to manage their own internal data that can change over time, triggering UI re-renders.</li>
+                    <li><strong>Props:</strong> Used to pass data from parent components to child components.</li>
+                    <li><strong>Effects (<code>useEffect</code> Hook):</strong> Allows functional components to perform side effects (e.g., data fetching, DOM manipulation) after rendering.</li>
+                    <li><strong>Hooks:</strong> Functions that let you "hook into" React features from functional components.</li>
+                </ul>
+
+                <h4>3.5.2. Vite</h4>
+                <p><strong>What it is:</strong> Vite is a next-generation frontend tooling that provides an extremely fast development server and a highly optimized build process.</p>
+
+                <h4>Why we chose it:</h4>
+                <ul>
+                    <li><strong>Speed:</strong> Leverages native ES modules in the browser for instant server start and hot module replacement (HMR), significantly speeding up development.</li>
+                    <li><strong>Simplicity:</strong> Minimal configuration needed to get started.</li>
+                </ul>
+
+                <h4>Key Features Used:</h4>
+                <ul>
+                    <li><strong>Development Server:</strong> Provides a local server (<code>http://localhost:5173</code>) for developing the frontend.</li>
+                    <li><strong>Hot Module Replacement (HMR):</strong> Automatically updates the browser with code changes without a full page reload, preserving application state.</li>
+                </ul>
+
+                <h4>3.5.3. Supporting Libraries:</h4>
+                <ul>
+                    <li><strong>Axios:</strong> A popular promise-based HTTP client for making API requests from the browser to the FastAPI backend.</li>
+                    <li><strong>React Router DOM:</strong> A library for declarative routing in React applications, enabling navigation between different pages (e.g., <code>/login</code>, <code>/dashboard</code>).</li>
+                </ul>
+
+                <div class="summary-note">
+                    <h4>Summary Note: React &amp; Vite</h4>
+                    <p>React with Vite provides a modern, efficient, and scalable framework for building our interactive web frontend, ensuring a smooth user experience.</p>
+                </div>
+
+                <div class="visual-idea">
+                    <h4>Visual Element Idea: React Component Tree</h4>
+                    <p><strong>Diagram:</strong> A component tree showing <code>App.jsx</code> as the root, with <code>Login</code>, <code>Register</code>, and <code>Dashboard</code> as child components. Illustrate data flow with props and state.</p>
+                    <p><strong>Color Coding:</strong> Different colors for each component type (e.g., page components - light blue, UI elements - gray).</p>
+                </div>
+            </section>
+            <div class="section-navigation">
+                <a href="#core-technologies">Previous Section</a>
+                <a href="#phase-breakdown">Next Section</a>
+            </div>
+        </section>
+
+        <section id="phase-breakdown">
+            <h2>IV. Phase-by-Phase Development Breakdown (Detailed)</h2>
+
+            <section id="phase1">
+                <h3>4.1. Phase 1: Core Backend &amp; Database Setup</h3>
+                <p><strong>Objective:</strong> Establish the foundational backend structure, database connection, and migration system.</p>
+
+                <h4>Detailed Steps &amp; Code Snippets:</h4>
+
+                <ol>
+                    <li>
+                        <h5>Project Initialization:</h5>
+                        <ul>
+                            <li>Created <code>D:\Think\vulnverse</code> directory.</li>
+                            <li>Created and activated Python virtual environment:
+                                <pre><code>python -m venv venv
+.\venv\Scripts\activate</code></pre>
+                            </li>
+                            <li>Installed core Python packages:
+                                <pre><code>pip install fastapi uvicorn python-dotenv psycopg2-binary sqlalchemy alembic</code></pre>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>database.py</code> - Database Connection:</h5>
+                        <p>Defines the SQLAlchemy engine and a <code>get_db</code> dependency for FastAPI.</p>
+                        <pre><code># D:/Think/vulnverse/database.py
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+import os
+from dotenv import load_dotenv
+
+load_dotenv() # Load environment variables from .env
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong>
+                                <ul>
+                                    <li><code>load_dotenv()</code>: Reads <code>DATABASE_URL</code> from <code>.env</code>.</li>
+                                    <li><code>create_engine()</code>: Establishes connection to PostgreSQL.</li>
+                                    <li><code>SessionLocal</code>: A factory for creating database sessions.</li>
+                                    <li><code>Base = declarative_base()</code>: The base class for our ORM models.</li>
+                                    <li><code>get_db()</code>: A FastAPI dependency that provides a database session for each request and ensures it's closed afterwards.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>models.py</code> - SQLAlchemy ORM Models:</h5>
+                        <p>Defines the database tables as Python classes.</p>
+                        <pre><code># D:/Think/vulnverse/models.py
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from database import Base
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    password = Column(String) # Hashed password
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    submissions = relationship("Submission", back_populates="user")
+
+class Machine(Base):
+    __tablename__ = "machines"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    description = Column(String)
+    docker_image = Column(String)
+    ip_address = Column(String, nullable=True) # Added later for IP tracking
+    flags = relationship("Flag", back_populates="machine")
+    submissions = relationship("Submission", back_populates="machine")
+
+class Flag(Base):
+    __tablename__ = "flags"
+    id = Column(Integer, primary_key=True, index=True)
+    machine_id = Column(Integer, ForeignKey("machines.id"))
+    flag = Column(String)
+    machine = relationship("Machine", back_populates="flags")
+
+class Submission(Base):
+    __tablename__ = "submissions"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    machine_id = Column(Integer, ForeignKey("machines.id"))
+    flag = Column(String) # The submitted flag value
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user = relationship("User", back_populates="submissions")
+    machine = relationship("Machine", back_populates="submissions")</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong> Each class maps to a table. <code>Column</code> defines table columns. <code>relationship</code> defines how tables are linked. <code>func.now()</code> sets default timestamps.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>.env</code> - Environment Variables:</h5>
+                        <p>Created <code>D:\Think\vulnverse\.env</code> with database credentials.</p>
+                        <pre><code># D:\Think\vulnverse\.env
+DATABASE_URL="postgresql://user:password@localhost:5432/vulnverse_db"
+SECRET_KEY="a_very_secret_key" # Added later for JWT</code></pre>
+                    </li>
+                    <li>
+                        <h5>Alembic Initialization &amp; Configuration:</h5>
+                        <ul>
+                            <li>Initialized Alembic: <code>alembic init alembic</code></li>
+                            <li>Modified <code>alembic/env.py</code> to load <code>DATABASE_URL</code> from <code>.env</code> and import <code>models.Base.metadata</code>.
+                                <pre><code># alembic/env.py (relevant parts)
+from dotenv import load_dotenv
+load_dotenv()
+from models import Base # Import your Base from models.py
+target_metadata = Base.metadata
+# ... other configurations ...
+config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))</code></pre>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5>Alembic Migration Generation &amp; Application:</h5>
+                        <ul>
+                            <li>Generated initial migration:
+                                <pre><code>venv\Scripts\python.exe -m alembic revision --autogenerate -m "Create_initial_tables"</code></pre>
+                                <ul>
+                                    <li><strong>Troubleshooting:</strong> Initial attempts with spaces in the message (<code>-m "Create initial tables"</code>) failed on Windows. Solution was to use underscores or ensure proper quoting.</li>
+                                </ul>
+                            </li>
+                            <li>Applied migration to database:
+                                <pre><code>venv\Scripts\python.exe -m alembic upgrade head</code></pre>
+                                <ul>
+                                    <li><strong>Troubleshooting:</strong> <code>psycopg2.OperationalError: password authentication failed</code> indicated incorrect <code>DATABASE_URL</code> credentials or a non-running PostgreSQL server.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <div class="summary-note">
+                    <h4>Summary Note: Phase 1</h4>
+                    <p>Phase 1 established the robust backend foundation with FastAPI, SQLAlchemy for ORM, Alembic for migrations, and PostgreSQL as the database. This setup ensures data persistence and schema version control.</p>
+                </div>
+            </section>
+
+            <section id="phase2">
+                <h3>4.2. Phase 2: Frontend Scaffolding &amp; User Authentication</h3>
+                <p><strong>Objective:</strong> Implement secure user registration and login, and prepare the React frontend to interact with these authentication endpoints.</p>
+
+                <h4>Detailed Steps &amp; Code Snippets:</h4>
+
+                <ol>
+                    <li>
+                        <h5>Install Authentication Dependencies:</h5>
+                        <pre><code>venv\Scripts\python.exe -m pip install passlib[bcrypt] python-jose</code></pre>
+                        <ul>
+                            <li><strong><code>passlib[bcrypt]</code>:</strong> For hashing and verifying user passwords securely.</li>
+                            <li><strong><code>python-jose</code>:</strong> For creating and verifying JSON Web Tokens (JWTs) for authentication.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>auth.py</code> - Authentication Logic:</h5>
+                        <p>Created <code>D:/Think/vulnverse/auth.py</code> to centralize authentication functions.</p>
+                        <pre><code># D:/Think/vulnverse/auth.py (simplified)
+from passlib.context import CryptContext
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+import models, database
+from pydantic import BaseModel # Used for Token and TokenData schemas
+
+# Load SECRET_KEY from .env
+import os
+from dotenv import load_dotenv
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440 # Increased from 30 for convenience
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: str | None = None
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15) # Default if not specified
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = db.query(models.User).filter(models.User.username == token_data.username).first()
+    if user is None:
+        raise credentials_exception
+    return user</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong>
+                                <ul>
+                                    <li><code>CryptContext</code>: Handles password hashing.</li>
+                                    <li><code>OAuth2PasswordBearer</code>: A FastAPI utility to extract the token from the <code>Authorization</code> header.</li>
+                                    <li><code>create_access_token</code>: Encodes user data into a JWT with an expiration.</li>
+                                    <li><code>get_current_user</code>: A dependency that decodes and validates the JWT, then fetches the user from the database. If invalid, it raises a <code>401 Unauthorized</code> error.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>schemas.py</code> - Pydantic Models for API Data:</h5>
+                        <p>Created <code>D:/Think/vulnverse/schemas.py</code> to define data structures for API requests and responses.</p>
+                        <pre><code># D:/Think/vulnverse/schemas.py (relevant parts)
+from pydantic import BaseModel
+from datetime import datetime
+
+class UserBase(BaseModel):
+    username: str
+
+class UserCreate(UserBase):
+    password: str
+
+class User(BaseModel):
+    id: int
+    username: str
+    created_at: datetime
+    class Config:
+        orm_mode = True # Allows Pydantic to read data from SQLAlchemy ORM models
+
+class MachineBase(BaseModel):
+    name: str
+    description: str | None = None
+    docker_image: str
+
+class MachineCreate(MachineBase):
+    pass
+
+class Machine(BaseModel):
+    id: int
+    name: str
+    description: str | None = None
+    docker_image: str
+    ip_address: str | None = None # Added later
+    class Config:
+        orm_mode = True
+
+class FlagBase(BaseModel):
+    flag: str
+
+class FlagCreate(FlagBase):
+    machine_id: int # Added later
+
+class Flag(BaseModel):
+    id: int
+    machine_id: int
+    flag: str
+    class Config:
+        orm_mode = True
+
+class SubmissionBase(BaseModel):
+    flag: str
+    machine_id: int # Added later
+
+class SubmissionCreate(SubmissionBase):
+    pass
+
+class Submission(BaseModel):
+    id: int
+    user_id: int
+    machine_id: int
+    flag: str
+    created_at: datetime
+    class Config:
+        orm_mode = True</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong> These models ensure that data sent to and from the API conforms to expected types and structures. <code>orm_mode = True</code> is crucial for FastAPI to automatically convert SQLAlchemy ORM objects into Pydantic models for responses.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>main.py</code> - Authentication Endpoints:</h5>
+                        <p>Modified <code>D:/Think/vulnverse/main.py</code> to include user registration and login.</p>
+                        <pre><code># D:/Think/vulnverse/main.py (relevant parts)
+from fastapi import FastAPI, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+import models, database, auth, schemas # Import new modules
+from fastapi.security import OAuth2PasswordRequestForm
+from datetime import timedelta
+from fastapi.responses import PlainTextResponse
+from fastapi.middleware.cors import CORSMiddleware # For CORS
+
+app = FastAPI()
+
+# CORS Configuration
+origins = [
+    "http://localhost:5173",  # Your React frontend's address
+    "http://127.0.0.1:5173",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Allow all methods (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"], # Allow all headers
+)
+
+@app.post("/users/", response_model=schemas.User)
+def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+    db_user = db.query(models.User).filter(models.User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    hashed_password = auth.get_password_hash(user.password)
+    db_user = models.User(username=user.username, password=hashed_password)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+@app.post("/token", response_model=auth.Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    if not user or not auth.verify_password(form_data.password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/users/me/", response_model=schemas.User)
+async def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
+    return current_user</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong>
+                                <ul>
+                                    <li><code>CORSMiddleware</code>: Essential for allowing cross-origin requests from the React frontend.</li>
+                                    <li><code>/users/</code>: Handles user creation, hashing passwords before saving.</li>
+                                    <li><code>/token</code>: Handles user login, verifies credentials, and issues a JWT.</li>
+                                    <li><code>/users/me/</code>: A protected route demonstrating how <code>get_current_user</code> dependency ensures only authenticated users can access it.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5>Frontend Scaffolding (React with Vite):</h5>
+                        <ul>
+                            <li>Created React project:
+                                <pre><code>npm create vite@latest frontend -- --template react</code></pre>
+                            </li>
+                            <li>Installed frontend dependencies:
+                                <pre><code>cd D:\Think\vulnverse\frontend
+npm install axios react-router-dom</code></pre>
+                            </li>
+                            <li><strong><code>src/services/api.js</code>:</strong> Configured Axios for API calls.
+                                <pre><code>// D:/Think/vulnverse/frontend/src/services/api.js
+import axios from 'axios';
+const api = axios.create({
+  baseURL: 'http://127.0.0.1:8000', // Backend URL
+});
+export default api;</code></pre>
+                            </li>
+                            <li><strong><code>src/components/Login.jsx</code>:</strong> React component for login form.
+                                <pre><code>// D:/Think/vulnverse/frontend/src/components/Login.jsx (simplified)
+import React, { useState } from 'react';
+import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
+
+function Login() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post('/token', new URLSearchParams({ username, password }));
+      localStorage.setItem('access_token', response.data.access_token);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login failed:', error);
+      alert('Login failed!');
+    }
+  };
+  // ... JSX for form ...
+}
+export default Login;</code></pre>
+                            </li>
+                            <li><strong><code>src/components/Register.jsx</code>:</strong> React component for registration form.
+                                <pre><code>// D:/Think/vulnverse/frontend/src/components/Register.jsx (simplified)
+import React, { useState } from 'react';
+import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
+
+function Register() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/users/', { username, password });
+      alert('Registration successful! Please login.');
+      navigate('/login');
+    } catch (error) {
+      console.error('Registration failed:', error);
+      alert('Registration failed!');
+    }
+  };
+  // ... JSX for form ...
+}
+export default Register;</code></pre>
+                            </li>
+                            <li><strong><code>src/App.jsx</code>:</strong> Configured React Router for navigation.
+                                <pre><code>// D:/Think/vulnverse/frontend/src/App.jsx (simplified)
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './components/Login';
+import Register from './components/Register';
+import Dashboard from './components/Dashboard';
+
+function App() {
+  return (
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+export default App;</code></pre>
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h4>Troubleshooting &amp; Refinements:</h4>
+                <ul>
+                    <li>
+                        <h5><code>TypeError: crypto.hash is not a function</code> (Vite/Node.js incompatibility):</h5>
+                        <ul>
+                            <li><strong>Problem:</strong> Older Vite versions used a Node.js internal <code>crypto.hash</code> function that was removed in newer Node.js versions (like <code>v21.5.0</code>).</li>
+                            <li><strong>Solution:</strong> Updated <code>vite</code> to <code>^5.0.0</code> and <code>@vitejs/plugin-react</code> to <code>^4.3.1</code> in <code>package.json</code>, then ran <code>npm install</code>. This ensured compatibility.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>Form data requires "python-multipart"</code>:</h5>
+                        <ul>
+                            <li><strong>Problem:</strong> FastAPI's <code>OAuth2PasswordRequestForm</code> requires <code>python-multipart</code> for parsing form data.</li>
+                            <li><strong>Solution:</strong> Installed <code>pip install python-multipart</code>.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>401 Unauthorized</code> (Token Expiry):</h5>
+                        <ul>
+                            <li><strong>Problem:</strong> JWTs have a default short expiry.</li>
+                            <li><strong>Solution:</strong> Increased <code>ACCESS_TOKEN_EXPIRE_MINUTES</code> in <code>auth.py</code> to 1440 minutes (24 hours).</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="summary-note">
+                    <h4>Summary Note: Phase 2</h4>
+                    <p>Phase 2 successfully implemented user authentication on the backend using JWTs and integrated it with a basic React frontend. Pydantic schemas were crucial for data validation, and CORS middleware resolved cross-origin communication issues.</p>
+                </div>
+            </section>
+
+            <section id="phase3">
+                <h3>4.3. Phase 3: Dockerized Lab Management</h3>
+                <p><strong>Objective:</strong> Enable the backend to programmatically manage vulnerable Docker containers, allowing users to start and stop lab machines and track their IP addresses.</p>
+
+                <h4>Detailed Steps &amp; Code Snippets:</h4>
+
+                <ol>
+                    <li>
+                        <h5>Install Docker SDK for Python:</h5>
+                        <pre><code>venv\Scripts\python.exe -m pip install docker</code></pre>
+                        <ul>
+                            <li><strong><code>docker</code> library:</strong> Provides Python bindings to the Docker Engine API.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5>Create Sample Vulnerable Application (<code>vulnerable_app/</code>):</h5>
+                        <ul>
+                            <li><code>vulnerable_app/app.py</code>: A simple Flask web app with a command injection vulnerability.
+                                <pre><code># D:/Think/vulnverse/vulnerable_app/app.py
+from flask import Flask, request
+import os
+app = Flask(__name__)
+@app.route('/')
+def index():
+    return '&lt;h1&gt;Vulnerable App&lt;/h1&gt;&lt;p&gt;Use /ping?ip=... to ping an IP.&lt;/p&gt;'
+@app.route('/ping')
+def ping():
+    ip = request.args.get('ip')
+    if ip:
+        cmd = f'ping -c 1 {ip}' # Vulnerable to command injection
+        stream = os.popen(cmd)
+        output = stream.read()
+        return f'&lt;pre&gt;{output}&lt;/pre&gt;'
+    return 'Please provide an IP address.'
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8080)</code></pre>
+                            </li>
+                            <li><code>vulnerable_app/Dockerfile</code>: Instructions to build the Docker image for the Flask app.
+                                <pre><code># D:/Think/vulnverse/vulnerable_app/Dockerfile
+FROM python:3.8-slim
+WORKDIR /app
+COPY . .
+RUN pip install Flask
+CMD ["python", "app.py"]</code></pre>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5>Build the Docker Image:</h5>
+                        <pre><code>cd D:\Think\vulnverse\vulnerable_app
+docker build -t vuln-app:latest .</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong> This command reads the <code>Dockerfile</code> in the current directory (<code>.</code>) and builds a Docker image named <code>vuln-app</code> with the tag <code>latest</code>. This image contains the Flask app and its dependencies.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5>Update <code>models.py</code> for IP Address Tracking:</h5>
+                        <ul>
+                            <li>Added <code>ip_address = Column(String, nullable=True)</code> to the <code>Machine</code> model.</li>
+                            <li><strong>Alembic Migration:</strong>
+                                <pre><code>venv\Scripts\python.exe -m alembic revision --autogenerate -m "Add_ip_address_to_Machine"
+vend\Scripts\python.exe -m alembic upgrade head</code></pre>
+                                <ul>
+                                    <li><strong>Purpose:</strong> To update the database schema to include the <code>ip_address</code> column in the <code>machines</code> table.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5>Update <code>schemas.py</code> for IP Address in API Responses:</h5>
+                        <ul>
+                            <li>Added <code>ip_address: str | None = None</code> to the <code>Machine</code> Pydantic schema.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>main.py</code> - Docker Integration &amp; Machine Management Endpoints:</h5>
+                        <ul>
+                            <li><strong><code>get_or_create_docker_network()</code> Function:</strong>
+                                <pre><code># D:/Think/vulnverse/main.py (relevant parts)
+import docker # Import the docker SDK
+# ... other imports ...
+
+VULNVERSE_NETWORK_NAME = "vulnverse_network"
+
+def get_or_create_docker_network():
+    client = docker.from_env() # Connect to Docker daemon
+    try:
+        network = client.networks.get(VULNVERSE_NETWORK_NAME)
+    except docker.errors.NotFound:
+        # If network doesn't exist, create it with a specific subnet
+        ipam_pool = docker.types.IPAMPool(subnet='172.20.0.0/16', gateway='172.20.0.1')
+        ipam_config = docker.types.IPAMConfig(pool_configs=[ipam_pool])
+        network = client.networks.create(VULNVERSE_NETWORK_NAME, driver="bridge", ipam=ipam_config)
+    return network</code></pre>
+                                <ul>
+                                    <li><strong>Explanation:</strong> This function ensures a dedicated Docker bridge network named <code>vulnverse_network</code> exists. If it doesn't, it creates one with a specified subnet (<code>172.20.0.0/16</code>) and gateway (<code>172.20.0.1</code>). This provides a controlled IP range for our vulnerable machines.</li>
+                                    <li><strong><code>docker.from_env()</code>:</strong> Connects to the Docker daemon using environment variables (e.g., <code>DOCKER_HOST</code>).</li>
+                                    <li><strong><code>client.networks.get()</code>:</strong> Tries to retrieve an existing network.</li>
+                                    <li><strong><code>docker.types.IPAMPool</code> / <code>IPAMConfig</code>:</strong> Used to define the IP addressing scheme for the network.</li>
+                                    <li><strong><code>client.networks.create()</code>:</strong> Creates the custom bridge network.</li>
+                                </ul>
+                            </li>
+                            <li><strong><code>/machines/</code> (GET) Endpoint:</strong>
+                                <pre><code># D:/Think/vulnverse/main.py (relevant parts)
+@app.get("/machines/", response_model=list[schemas.Machine])
+def read_machines(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
+    machines = db.query(models.Machine).offset(skip).limit(limit).all()
+    return machines</code></pre>
+                                <ul>
+                                    <li><strong>Purpose:</strong> Retrieves all machine entries from the database.</li>
+                                </ul>
+                            </li>
+                            <li><strong><code>/machines/</code> (POST) Endpoint:</strong>
+                                <pre><code># D:/Think/vulnverse/main.py (relevant parts)
+@app.post("/machines/", response_model=schemas.Machine)
+def create_machine(machine: schemas.MachineCreate, db: Session = Depends(database.get_db)):
+    db_machine = models.Machine(**machine.dict())
+    db.add(db_machine)
+    db.commit()
+    db.refresh(db_machine)
+    return db_machine</code></pre>
+                                <ul>
+                                    <li><strong>Purpose:</strong> Adds a new machine entry to the database.</li>
+                                </ul>
+                            </li>
+                            <li><strong><code>/machines/{machine_id}/start</code> (POST) Endpoint:</strong>
+                                <pre><code># D:/Think/vulnverse/main.py (relevant parts)
+@app.post("/machines/{machine_id}/start")
+def start_machine(machine_id: int, db: Session = Depends(database.get_db)):
+    db_machine = db.query(models.Machine).filter(models.Machine.id == machine_id).first()
+    if not db_machine:
+        raise HTTPException(status_code=404, detail="Machine not found")
+
+    client = docker.from_env()
+    network = get_or_create_docker_network() # Ensure custom network exists
+    container_name = f"vuln-app-{db_machine.id}"
+
+    try:
+        # Check if container already exists and is running
+        try:
+            container = client.containers.get(container_name)
+            if container.status == "running":
+                raise HTTPException(status_code=400, detail="Machine already running")
+            else:
+                container.remove() # Remove stopped container to start fresh
+        except docker.errors.NotFound:
+            pass # Container does not exist, proceed to run
+
+        container = client.containers.run(
+            db_machine.docker_image, # e.g., "vuln-app:latest"
+            name=container_name,
+            detach=True,
+            network=network.name, # Connect to our custom network
+            ports={'8080/tcp': None} # Map container port 8080 to a random host port
+        )
+
+        # Get the IP address from the custom network
+        container.reload() # Refresh container info
+        ip_address = container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
+
+        # Update the database with the assigned IP address
+        db_machine.ip_address = ip_address
+        db.add(db_machine)
+        db.commit()
+        db.refresh(db_machine)
+
+        return {"message": f"Machine {db_machine.name} started with IP {ip_address}"}
+    except docker.errors.APIError as e:
+        raise HTTPException(status_code=500, detail=str(e))</code></pre>
+                                <ul>
+                                    <li><strong>Explanation:</strong>
+                                        <ul>
+                                            <li>Retrieves machine details from the database.</li>
+                                            <li>Calls <code>get_or_create_docker_network()</code> to ensure the network is ready.</li>
+                                            <li>Checks if a container with the same name already exists to prevent errors.</li>
+                                            <li><code>client.containers.run()</code>: Starts the Docker container.
+                                                <ul>
+                                                    <li><code>db_machine.docker_image</code>: Specifies which image to use.</li>
+                                                    <li><code>name=container_name</code>: Assigns a unique name to the container.</li>
+                                                    <li><code>detach=True</code>: Runs the container in the background.</li>
+                                                    <li><code>network=network.name</code>: Connects the container to our <code>vulnverse_network</code>. This is crucial for VPN access.</li>
+                                                    <li><code>ports={'8080/tcp': None}</code>: Exposes port 8080 (the Flask app's port) from the container to a <em>randomly assigned</em> available port on the host. We don't use this host port for VPN access, but it's good practice for debugging.</li>
+                                                </ul>
+                                            </li>
+                                            <li><code>container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']</code>: This is how we extract the IP address that Docker assigned to the container <em>within the <code>vulnverse_network</code></em>.</li>
+                                            <li>The obtained IP address is then saved to the <code>ip_address</code> column in the database.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><strong><code>/machines/{machine_id}/stop</code> (POST) Endpoint:</strong>
+                                <pre><code># D:/Think/vulnverse/main.py (relevant parts)
+@app.post("/machines/{machine_id}/stop")
+def stop_machine(machine_id: int, db: Session = Depends(database.get_db)):
+    db_machine = db.query(models.Machine).filter(models.Machine.id == machine_id).first()
+    if not db_machine:
+        raise HTTPException(status_code=404, detail="Machine not found")
+
+    client = docker.from_env()
+    container_name = f"vuln-app-{db_machine.id}"
+    try:
+        container = client.containers.get(container_name)
+        container.stop()
+        container.remove()
+
+        # Clear the IP address from the database
+        db_machine.ip_address = None
+        db.add(db_machine)
+        db.commit()
+        db.refresh(db_machine)
+
+        return {"message": f"Machine {db_machine.name} stopped and removed"}
+    except docker.errors.NotFound:
+        raise HTTPException(status_code=404, detail="Container not found")
+    except docker.errors.APIError as e:
+        raise HTTPException(status_code=500, detail=str(e))</code></pre>
+                                <ul>
+                                    <li><strong>Explanation:</strong>
+                                        <ul>
+                                            <li>Retrieves the container by its name.</li>
+                                            <li><code>container.stop()</code>: Sends a stop signal to the container.</li>
+                                            <li><code>container.remove()</code>: Deletes the container.</li>
+                                            <li>Sets the <code>ip_address</code> in the database back to <code>None</code>.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>Dashboard.jsx</code> - Displaying IP and Machine Actions:</h5>
+                        <p>Updated the frontend to display the <code>ip_address</code> and include buttons for start/stop.</p>
+                        <pre><code>// D:/Think/vulnverse/frontend/src/components/Dashboard.jsx (relevant parts)
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
+
+function Dashboard() {
+  const [machines, setMachines] = useState([]);
+  const navigate = useNavigate();
+
+  const fetchMachines = async () => { // Centralized fetch function
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) { navigate('/login'); return; }
+      const response = await api.get('/machines/', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMachines(response.data);
+    } catch (error) {
+      console.error('Failed to fetch machines:', error);
+      if (error.response && error.response.status === 401) { navigate('/login'); }
+    }
+  };
+
+  useEffect(() => {
+    fetchMachines(); // Fetch machines on component mount
+  }, [navigate]);
+
+  const handleStartMachine = async (machineId) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      await api.post(`/machines/${machineId}/start`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('Machine started!');
+      fetchMachines(); // Re-fetch to update IP address
+    } catch (error) { /* ... error handling ... */ }
+  };
+
+  const handleStopMachine = async (machineId) => {
+    try {
+      const token = localStorage.getItem('access_access_token');
+      await api.post(`/machines/${machineId}/stop`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('Machine stopped and removed!');
+      fetchMachines(); // Re-fetch to clear IP address
+    } catch (error) { /* ... error handling ... */ }
+  };
+
+  return (
+    <div>
+      {/* ... other JSX ... */}
+      <ul>
+        {machines.map((machine) => (
+          <li key={machine.id}>
+            <strong>{machine.name}</strong>: {machine.description} (Image: {machine.docker_image})
+            {machine.ip_address && &lt;p&gt;IP Address: {machine.ip_address}&lt;/p&gt;} {/* Display IP */}
+            &lt;div&gt;
+              &lt;button onClick={() => handleStartMachine(machine.id)}&gt;Start Machine&lt;/button&gt;
+              &lt;button onClick={() => handleStopMachine(machine.id)}&gt;Stop Machine&lt;/button&gt;
+              {/* ... other buttons ... */}
+            &lt;/div&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  );
+}
+export default Dashboard;</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong>
+                                <ul>
+                                    <li><code>fetchMachines()</code>: A function to get the latest machine data from the backend.</li>
+                                    <li><code>useEffect</code>: Calls <code>fetchMachines()</code> when the component mounts.</li>
+                                    <li><code>handleStartMachine</code> / <code>handleStopMachine</code>: Call the respective backend endpoints and then call <code>fetchMachines()</code> again to update the UI with the new IP address (or <code>None</code>).</li>
+                                    <li>Conditional rendering <code>{machine.ip_address && &lt;p&gt;IP Address: {machine.ip_address}&lt;/p&gt;}</code> ensures the IP is only shown when available.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <div class="summary-note">
+                    <h4>Summary Note: Phase 3</h4>
+                    <p>Phase 3 enabled dynamic management of vulnerable Docker containers. The backend now creates and manages a dedicated Docker network, assigns IP addresses to started machines, and updates the database. The frontend reflects these changes, providing a real-time view of the lab environment.</p>
+                </div>
+            </section>
+
+            <section id="phase4">
+                <h3>4.4. Phase 4: OpenVPN Integration</h3>
+                <p><strong>Objective:</strong> Provide secure VPN access for players to connect to the Dockerized lab network.</p>
+
+                <h4>Detailed Steps &amp; Code Snippets:</h4>
+
+                <ol>
+                    <li>
+                        <h5>Dockerized OpenVPN Server Setup (using <code>kylemanna/openvpn</code>):</h5>
+                        <ul>
+                            <li><strong>Create Data Directory:</strong>
+                                <pre><code>mkdir D:\Think\vulnverse\openvpn-data</code></pre>
+                                <ul>
+                                    <li><strong>Purpose:</strong> This directory on the host will persist all OpenVPN configuration, certificates, and keys.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Generate OpenVPN Configuration:</strong>
+                                <pre><code>docker run -v D:/Think/vulnverse/openvpn-data:/etc/openvpn --log-driver=none --rm kylemanna/openvpn ovpn_genconfig -u udp://YOUR_VPN_SERVER_IP</code></pre>
+                                <ul>
+                                    <li><strong><code>YOUR_VPN_SERVER_IP</code>:</strong> This is the IP address that clients will use to connect.
+                                        <ul>
+                                            <li><code>127.0.0.1</code>: For testing from the same host.</li>
+                                            <li>Your Windows machine's WiFi IP (e.g., <code>192.168.1.100</code>): For testing from other devices on your local network (like a Kali VM).</li>
+                                            <li>A public IP/domain: For external access.</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>Explanation:</strong> This command generates the <code>openvpn.conf</code> and <code>ovpn_env.sh</code> files within the mounted volume. It embeds the <code>YOUR_VPN_SERVER_IP</code> into the configuration.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Initialize PKI (Certificate Authority &amp; Server Certs):</strong>
+                                <pre><code>docker run -v D:/Think/vulnverse/openvpn-data:/etc/openvpn --log-driver=none --rm -it kylemanna/openvpn ovpn_initpki</code></pre>
+                                <ul>
+                                    <li><strong>Explanation:</strong> This command runs Easy-RSA inside the container to create the CA (Certificate Authority) and the server's certificate and private key. You'll be prompted for a CA passphrase and a Common Name (e.g., <code>VulnVerse CA</code>).</li>
+                                </ul>
+                            </li>
+                            <li><strong>Generate Client Certificate:</strong>
+                                <pre><code>docker run -v D:/Think/vulnverse/openvpn-data:/etc/openvpn --log-driver=none --rm -it kylemanna/openvpn easyrsa build-client-full client nopass</code></pre>
+                                <ul>
+                                    <li><strong>Explanation:</strong> Creates a client certificate and key pair named <code>client</code>, signed by your CA. <code>nopass</code> means no passphrase for the client key.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Generate Client <code>.ovpn</code> File:</strong>
+                                <pre><code>docker run -v D:/Think/vulnverse/openvpn-data:/etc/openvpn --log-driver=none --rm kylemanna/openvpn ovpn_getclient client &gt; D:/Think/vulnverse/openvpn-data/client.ovpn</code></pre>
+                                <ul>
+                                    <li><strong>Explanation:</strong> This command bundles the client's certificate, key, the CA certificate, and the server's configuration into a single <code>.ovpn</code> file. This is the file users will download and import into their OpenVPN client software.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Ensure Docker Network Exists (again, for clarity):</strong>
+                                <pre><code>docker network create --subnet 172.20.0.0/16 --gateway 172.20.0.1 vulnverse_network || true</code></pre>
+                                <ul>
+                                    <li><strong>Explanation:</strong> This ensures the <code>vulnverse_network</code> (our lab network) is present and correctly configured. The <code>|| true</code> handles cases where it already exists.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Start OpenVPN Server Container:</strong>
+                                <pre><code>docker run -v D:/Think/vulnverse/openvpn-data:/etc/openvpn -d -p 1194:1194/udp --cap-add=NET_ADMIN --network vulnverse_network --name openvpn_server kylemanna/openvpn</code></pre>
+                                <ul>
+                                    <li><strong>Explanation:</strong>
+                                        <ul>
+                                            <li><code>-d</code>: Runs in detached mode.</li>
+                                            <li><code>-p 1194:1194/udp</code>: Maps UDP port 1194 from the host to the container, allowing VPN clients to connect.</li>
+                                            <li><code>--cap-add=NET_ADMIN</code>: Grants network administration capabilities needed by OpenVPN.</li>
+                                            <li><code>--network vulnverse_network</code>: <strong>Crucially, connects the OpenVPN server container to the same Docker network as the vulnerable machines.</strong> This allows the VPN server to route client traffic directly to the lab machines.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>main.py</code> - Serving the VPN Configuration:</h5>
+                        <p>Modified the <code>/vpn/generate-config</code> endpoint to read and serve the generated <code>client.ovpn</code> file.</p>
+                        <pre><code># D:/Think/vulnverse/main.py (relevant parts)
+@app.post("/vpn/generate-config")
+async def generate_vpn_config(current_user: models.User = Depends(auth.get_current_user)):
+    try:
+        # Read the pre-generated client.ovpn file
+        with open("D:/Think/vulnverse/openvpn-data/client.ovpn", "r") as f:
+            config_data = f.read()
+        # Return it as a plain text response with octet-stream media type for download
+        return PlainTextResponse(content=config_data, media_type="application/octet-stream")
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="VPN configuration file not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading VPN config: {e}")</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong> This endpoint now directly serves the <code>client.ovpn</code> file that was generated by the Dockerized OpenVPN setup. In a more advanced setup, you might dynamically generate user-specific <code>.ovpn</code> files here.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>Dashboard.jsx</code> - VPN Download Button:</h5>
+                        <p>Added a button to trigger the VPN config download.</p>
+                        <pre><code>// D:/Think/vulnverse/frontend/src/components/Dashboard.jsx (relevant parts)
+const handleDownloadVpnConfig = async () => {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await api.post('/vpn/generate-config', {}, {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob', // Important for downloading binary data
+        });
+        // Create a download link and trigger click
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'client.ovpn');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        alert('VPN config downloaded!');
+    } catch (error) {
+        console.error('Failed to download VPN config:', error);
+        alert('Failed to download VPN config!');
+    }
+};
+// ... in return JSX ...
+&lt;button onClick={() => handleDownloadVpnConfig()}&gt;Download VPN Config&lt;/button&gt;</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong> This function makes an authenticated POST request to the backend's <code>/vpn/generate-config</code> endpoint. It sets <code>responseType: 'blob'</code> to handle the file download and then programmatically creates a temporary download link.</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <div class="summary-note">
+                    <h4>Summary Note: Phase 4</h4>
+                    <p>Phase 4 successfully integrated a Dockerized OpenVPN server, enabling secure network access to the lab environment. The backend now serves the generated <code>.ovpn</code> client configuration, allowing players to connect to and access vulnerable machines.</p>
+                </div>
+            </section>
+
+            <section id="phase5">
+                <h3>4.5. Phase 5: The "Game Loop" (Flag Submission)</h3>
+                <p><strong>Objective:</strong> Implement the core "game loop" functionality: allowing users to submit flags and validating them against correct answers.</p>
+
+                <h4>Detailed Steps &amp; Code Snippets:</h4>
+
+                <ol>
+                    <li>
+                        <h5><code>main.py</code> - Flag Submission Endpoint:</h5>
+                        <p>Added the <code>/submissions/</code> endpoint to handle flag validation and recording.</p>
+                        <pre><code># D:/Think/vulnverse/main.py (relevant parts)
+@app.post("/submissions/", response_model=schemas.Submission)
+def create_submission(submission: schemas.SubmissionCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
+    # 1. Check if machine exists
+    machine = db.query(models.Machine).filter(models.Machine.id == submission.machine_id).first()
+    if not machine:
+        raise HTTPException(status_code=404, detail="Machine not found")
+
+    # 2. Check if submitted flag is correct for this machine
+    correct_flag = db.query(models.Flag).filter(
+        models.Flag.machine_id == submission.machine_id,
+        models.Flag.flag == submission.flag # Compare submitted flag with stored correct flag
+    ).first()
+    if not correct_flag:
+        raise HTTPException(status_code=400, detail="Incorrect flag")
+
+    # 3. Check if user has already submitted this flag for this machine
+    db_submission = db.query(models.Submission).filter(
+        models.Submission.user_id == current_user.id,
+        models.Submission.machine_id == submission.machine_id
+    ).first()
+    if db_submission:
+        raise HTTPException(status_code=400, detail="Flag already submitted")
+
+    # 4. Record the successful submission
+    db_submission = models.Submission(**submission.dict(), user_id=current_user.id)
+    db.add(db_submission)
+    db.commit()
+    db.refresh(db_submission)
+    return db_submission</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong> This endpoint performs several checks: machine existence, flag correctness, and duplicate submissions. If all checks pass, it records the submission in the database.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>schemas.py</code> - SubmissionCreate Schema:</h5>
+                        <ul>
+                            <li>Ensured <code>machine_id</code> is included in <code>SubmissionCreate</code> for proper validation.
+                                <pre><code># D:/Think/vulnverse/schemas.py (relevant parts)
+class SubmissionBase(BaseModel):
+    flag: str
+    machine_id: int # Crucial for linking submission to machine
+
+class SubmissionCreate(SubmissionBase):
+    pass</code></pre>
+                            </li>
+                            <li><strong>Troubleshooting:</strong> Initially, <code>machine_id</code> was missing from <code>SubmissionCreate</code>, leading to <code>ResponseValidationError</code> when submitting flags. Adding it resolved the issue.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <h5><code>Dashboard.jsx</code> - Submit Flag Button:</h5>
+                        <ul>
+                            <li>Added a button and logic to prompt for a flag and send it to the backend.
+                                <pre><code>// D:/Think/vulnverse/frontend/src/components/Dashboard.jsx (relevant parts)
+const handleSubmitFlag = async (machineId) => {
+    const flag = prompt('Enter the flag:'); // Simple prompt for flag input
+    if (!flag) return; // User cancelled
+
+    try {
+        const token = localStorage.getItem('access_token');
+        await api.post('/submissions/', { machine_id: machineId, flag }, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        alert('Flag submitted successfully!');
+    } catch (error) {
+        console.error('Flag submission failed:', error);
+        alert(error.response?.data?.detail || 'Flag submission failed!'); // Display backend error message
+    }
+};
+// ... in return JSX ...
+&lt;button onClick={() => handleSubmitFlag(machine.id)}&gt;Submit Flag&lt;/button&gt;</code></pre>
+                            </li>
+                            <li><strong>Explanation:</strong> This function prompts the user for a flag, then sends an authenticated POST request to the <code>/submissions/</code> endpoint with the <code>machine_id</code> and the entered <code>flag</code>.</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <div class="summary-note">
+                    <h4>Summary Note: Phase 5</h4>
+                    <p>Phase 5 established the core "game loop" by implementing flag submission and validation. This allows players to prove they've successfully exploited a vulnerable machine, and the platform records their achievements.</p>
+                </div>
+            </section>
+
+            <div class="section-navigation">
+                <a href="#phase4">Previous Section</a>
+                <a href="#update-2-0">Next Section</a>
+            </div>
+        </section>
+
+        <section id="update-2-0">
+            <h2>V. Update 2.0: Enhancements &amp; Generalization</h2>
+            <p>This section details the significant improvements and refactorings implemented to enhance the platform's functionality, robustness, and extensibility since the initial development phases.</p>
+
+            <section id="changelog-feature">
+                <h3>5.1. Frontend Changelog Feature</h3>
+                <p><strong>Problem:</strong> The platform lacked a dedicated section to view machine updates and an administrative interface to add them.</p>
+                <p><strong>Solution:</strong> A comprehensive changelog system was integrated across the backend and frontend.</p>
+                <ul>
+                    <li><strong>Backend (`main.py`, `models.py`, `schemas.py`):</strong>
+                        <ul>
+                            <li>A new `Changelog` model was added to `models.py` to store changelog entries, including fields for `machine_id`, `admin_id` (the user who made the change), `timestamp`, and `description`.</li>
+                            <li>Corresponding Pydantic schemas (`ChangelogBase`, `ChangelogCreate`, `Changelog`) were defined in `schemas.py` for API data validation.</li>
+                            <li>Two new API endpoints were implemented in `main.py`:
+                                <ul>
+                                    <li>`POST /admin/machines/{machine_id}/changelog`: An admin-only endpoint allowing administrators to add new changelog entries for a specific machine.</li>
+                                    <li>`GET /machines/{machine_id}/changelog`: An endpoint for users to retrieve and view all changelog entries for a given machine.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li><strong>Frontend (`MachineDetail.jsx`):</strong>
+                        <ul>
+                            <li>The `MachineDetail.jsx` component was refactored to include a tabbed interface, separating "Machine Info" from "Changelog."</li>
+                            <li>The "Changelog" tab was designed to fetch and display the changelog entries from the new backend endpoint.</li>
+                            <li>An admin-only form was implemented within the "Changelog" tab, allowing administrators to directly add new entries. This functionality leverages `jwtDecode` to verify the user's admin status based on their JWT.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <p><strong>Impact:</strong> This feature significantly improves the platform's transparency, allowing players to track updates and changes to vulnerable machines. It also empowers administrators with a direct tool for communicating these updates.</p>
+            </section>
+
+            <section id="db-migration-robustness">
+                <h3>5.2. Database &amp; Migration Robustness</h3>
+                <p><strong>Problem:</strong> An `IntegrityError` (specifically a `ForeignKeyViolation`) occurred when attempting to update machine details if flags associated with that machine had already been submitted by users.</p>
+                <p><strong>Reason:</strong> The previous flag update logic in the backend involved physically deleting all existing flags for a machine and then re-adding them. This violated the foreign key constraint linking the `submissions` table to the `flags` table, as existing submissions referenced the flags being deleted.</p>
+                <p><strong>Solution: Soft-Deletion for Flags:</strong> To preserve historical submission data while allowing flags to be managed, a soft-deletion mechanism was implemented for flags.</p>
+                <ul>
+                    <li><strong>Backend (`models.py`):</strong> A new column, `is_deleted = Column(Boolean, default=False)`, was added to the `Flag` model. This column indicates whether a flag is logically deleted but still exists in the database.</li>
+                    <li><strong>Backend (`main.py` - `update_machine` endpoint):</strong> The logic for updating flags was revised:
+                        <ul>
+                            <li>Instead of `db.query(models.Flag).filter(...).delete()`, the system now retrieves all existing flags for a machine.</li>
+                            <li>It then compares these existing flags with the new list of flags provided by the frontend.</li>
+                            <li>Flags present in the database but not in the new list are marked as `is_deleted=True`.</li>
+                            <li>Flags that are in both lists (or were previously soft-deleted and are now re-added) have their `is_deleted` status set to `False`.</li>
+                            <li>Truly new flags are added as new records with `is_deleted=False`.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Backend (`main.py` - `get_machine_flags_status` endpoint):</strong> The query for retrieving flags was updated to include a filter, ensuring that only flags where `is_deleted=False` are returned to the frontend.</li>
+                    <li><strong>Alembic Migration:</strong> A new Alembic migration was created (and manually applied due to tool execution issues) to add the `is_deleted` column to the `flags` table in the database.</li>
+                </ul>
+                <p><strong>Impact:</strong> This change ensures data integrity by preserving submission history while providing administrators the flexibility to manage flags without breaking existing relationships. It also makes the flag management more robust and less prone to database errors.</p>
+            </section>
+
+            <section id="cors-refinement">
+                <h3>5.3. CORS Configuration Refinement</h3>
+                <p><strong>Problem:</strong> Frontend requests to the backend were being blocked by the browser's Cross-Origin Resource Sharing (CORS) policy, specifically with an `Access-Control-Allow-Origin` header missing error.</p>
+                <p><strong>Reason:</strong> Although `CORSMiddleware` was configured in `main.py` to allow `http://localhost:5173` and `http://127.0.0.1:5173`, the frontend was making requests to `http://127.0.0.1:8000` while being served from `http://localhost:5173`. The browser considered these different origins, and the backend was not sending the necessary `Access-Control-Allow-Origin` header for the specific origin of the request.</p>
+                <p><strong>Solution:</strong> For development purposes, the `allow_origins` parameter in `CORSMiddleware` in `main.py` was temporarily set to `["*"]`, allowing requests from all origins.</p>
+                <pre><code># D:/Think/vulnverse/main.py (relevant part)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)</code></pre>
+                <p><strong>Impact:</strong> This resolved the immediate cross-origin communication issues, allowing the frontend and backend to interact seamlessly during development. It's important to note that for production environments, this should be reverted to a more restrictive list of allowed origins for security reasons.</p>
+            </section>
+
+            <section id="generalized-machine-model">
+                <h3>5.4. Generalized Machine Provider Support (Docker &amp; VirtualBox)</h3>
+                <p><strong>Problem:</strong> The initial `Machine` model was tightly coupled to Docker (`docker_image` field), making it inflexible for integrating other machine types like Virtual Machines (VMs).</p>
+                <p><strong>Solution: Flexible and Extensible Machine Model:</strong> The `Machine` model and related backend/frontend logic were refactored to support multiple machine providers (e.g., Docker, VirtualBox) using a more generalized approach.</p>
+                <ul>
+                    <li><strong>Backend (`models.py`):</strong>
+                        <ul>
+                            <li>Removed specific fields like `docker_image`, `machine_type`, `vm_name`, `vm_snapshot_name`.</li>
+                            <li>Added new, generalized fields:
+                                <ul>
+                                    <li>`provider = Column(String, default="docker")`: Stores the type of machine provider (e.g., 'docker', 'virtualbox').</li>
+                                    <li>`source_identifier = Column(String, nullable=True)`: Stores the primary identifier for the machine within its provider (e.g., Docker image name like `vuln-app:latest`, or VirtualBox VM name like `Metasploitable2`). Made nullable to accommodate existing data during migration.</li>
+                                    <li>`config_json = Column(String, nullable=True)`: A flexible field to store provider-specific configurations as a JSON string (e.g., `{"snapshot_name": "CleanState"}` for VirtualBox VMs).</li>
+                                </ul>
+                            </li>
+                            <li><strong>Alembic Migrations:</strong> New migrations were generated and applied to update the database schema with these changes, including resolving "multiple heads" issues and making `source_identifier` nullable for existing data.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Backend (`schemas.py`):</strong> The Pydantic `MachineBase` and `Machine` schemas were updated to reflect the new `provider`, `source_identifier`, and `config_json` fields, ensuring data consistency between the API and the database.</li>
+                    <li><strong>Backend (`virtualbox_manager.py`):</strong> A new Python module was created to encapsulate all VirtualBox-specific operations. This module uses Python's `subprocess` to execute `VBoxManage` command-line tools.</li>
+                        <h4>`virtualbox_manager.py` - Detailed Breakdown:</h4>
+                        <pre><code># D:/Think/vulnverse/virtualbox_manager.py
+import subprocess
+import json
+import time # Added for sleep in stop_vm
+
+class VirtualBoxManager:
+    def _run_vboxmanage(self, command):
+        """Helper to run VBoxManage commands and handle errors."""
+        try:
+            result = subprocess.run(["VBoxManage"] + command, capture_output=True, text=True, check=True)
+            return result.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            raise Exception(f"VBoxManage command failed: {' '.join(command)}\nStdout: {e.stdout}\nStderr: {e.stderr}")
+        except FileNotFoundError:
+            raise Exception("VBoxManage not found. Is VirtualBox installed and in your PATH?")
+
+    def start_vm(self, vm_name):
+        """Starts a VirtualBox VM in headless mode."""
+        print(f"Attempting to start VM: {vm_name}")
+        self._run_vboxmanage(["startvm", vm_name, "--type", "headless"])
+        print(f"VM {vm_name} started.")
+
+    def stop_vm(self, vm_name):
+        """Stops a VirtualBox VM, attempting graceful shutdown first, then powering off."""
+        print(f"Attempting to stop VM: {vm_name}")
+        try:
+            # Try acpipowerbutton first for graceful shutdown
+            self._run_vboxmanage(["controlvm", vm_name, "acpipowerbutton"])
+            time.sleep(5) # Give it some time to shut down gracefully
+            # Check if VM is still running, if so, poweroff
+            status_output = self._run_vboxmanage(["showvminfo", vm_name, "--machinereadable"]).splitlines()
+            if any("VMState=\"running\"" in s for s in status_output):
+                print(f"VM {vm_name} still running after ACPI, powering off.")
+                self._run_vboxmanage(["controlvm", vm_name, "poweroff"])
+        except Exception as e:
+            print(f"Graceful shutdown failed for {vm_name}: {e}. Powering off.")
+            self._run_vboxmanage(["controlvm", vm_name, "poweroff"])
+        print(f"VM {vm_name} stopped.")
+
+    def reset_vm(self, vm_name, snapshot_name):
+        """Restores a VM to a specified snapshot and then starts it."""
+        print(f"Attempting to reset VM: {vm_name} to snapshot: {snapshot_name}")
+        self._run_vboxmanage(["snapshot", vm_name, "restore", snapshot_name])
+        print(f"VM {vm_name} restored to snapshot {snapshot_name}.")
+        self.start_vm(vm_name) # Start after restoring
+        print(f"VM {vm_name} reset and started.")
+
+    def get_vm_ip(self, vm_name):
+        """Attempts to retrieve the VM's IP address using guest properties (requires Guest Additions)."""
+        print(f"Attempting to get IP for VM: {vm_name}")
+        try:
+            # This command tries to get the IP from the guest OS via Guest Additions
+            output = self._run_vboxmanage(["guestproperty", "get", vm_name, "/VirtualBox/GuestInfo/Net/0/V4/IP"])
+            if output and "No value set!" not in output:
+                ip_address = output.split(' ')[-1]
+                print(f"Found IP for {vm_name}: {ip_address}")
+                return ip_address
+            else:
+                print(f"No IP found for {vm_name} via guestproperty. This often means Guest Additions are not installed or the VM's network is not configured to report IP via guest properties.")
+                return None
+        except Exception as e:
+            print(f"Error getting VM IP for {vm_name}: {e}")
+            return None
+
+vbox_manager = VirtualBoxManager()
+</code></pre>
+                        <ul>
+                            <li><strong>Explanation:</strong>
+                                <ul>
+                                    <li>`_run_vboxmanage(command)`: A crucial helper method that wraps `subprocess.run`. It constructs the `VBoxManage` command, executes it, captures its output, and handles potential errors (e.g., `VBoxManage` not found, command failing). This abstraction makes the other VM control functions cleaner.</li>
+                                    <li>`start_vm(vm_name)`: Initiates the VM startup. The `--type headless` argument ensures the VM starts in the background without a graphical interface, which is ideal for server-side management.</li>
+                                    <li>`stop_vm(vm_name)`: Implements a robust shutdown sequence. It first attempts a graceful shutdown using `acpipowerbutton` (simulating pressing the power button on a physical machine, allowing the guest OS to shut down cleanly). A `time.sleep(5)` is included to give the VM time to respond. If the VM is still running after this, it resorts to a forceful `poweroff`.</li>
+                                    <li>`reset_vm(vm_name, snapshot_name)`: This function is key for CTF environments. It restores the VM to a predefined `snapshot_name`, effectively reverting it to a clean, initial state. After restoring, it immediately calls `start_vm` to bring the machine back online.</li>
+                                    <li>`get_vm_ip(vm_name)`: This is the most challenging aspect of programmatic VM management. It attempts to retrieve the VM's IP address using VirtualBox Guest Additions' `guestproperty` mechanism. **It is critical that VirtualBox Guest Additions are installed and running inside the guest VM for this function to work reliably.** If the VM's network is not configured to report its IP via guest properties, or if Guest Additions are absent, this function will return `None`.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li><strong>Backend (`main.py`):</strong>
+                        <p>The core logic for managing machines was updated to dynamically choose between Docker and VirtualBox operations based on the `provider` field.</p>
+                        <ul>
+                            <li>The `create_admin_machine` and `update_machine` endpoints were adjusted to handle the new `provider`, `source_identifier`, and `config_json` fields directly from the incoming `schemas.MachineCreate` data.</li>
+                            <li>The `start_machine`, `stop_machine`, and `restart_machine` endpoints were refactored to dispatch operations dynamically based on the `db_machine.provider` value.</li>
+                        </ul>
+                        <h4>`main.py` - Dispatching Logic Example (`start_machine`):</h4>
+                        <pre><code># D:/Think/vulnverse/main.py (relevant part of start_machine)
+    # ... (initial checks) ...
+    ip_address = None
+    try:
+        if db_machine.provider == "docker":
+            # ... (existing Docker start logic) ...
+            container = client.containers.run(
+                db_machine.source_identifier, # Use source_identifier for docker image
+                # ... (other docker run args) ...
+            )
+            # ... (Docker IP retrieval) ...
+            ip_address = container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
+
+        elif db_machine.provider == "virtualbox":
+            vm_name = db_machine.source_identifier
+            virtualbox_manager.vbox_manager.start_vm(vm_name)
+            ip_address = virtualbox_manager.vbox_manager.get_vm_ip(vm_name)
+            if not ip_address:
+                raise HTTPException(status_code=500, detail=f"Could not retrieve IP for VirtualBox VM {vm_name}. Ensure VM is configured correctly and Guest Additions are installed.")
+
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported machine provider: {db_machine.provider}")
+
+        # Update the database with the IP address
+        db_machine.ip_address = ip_address
+        # ... (db commit/refresh) ...
+        return {"message": f"Machine {db_machine.name} started with IP {ip_address}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+</code></pre>
+                        <h4>`main.py` - Dispatching Logic Example (`stop_machine`):</h4>
+                        <pre><code># D:/Think/vulnverse/main.py (relevant part of stop_machine)
+    # ... (initial checks) ...
+    try:
+        if db_machine.provider == "docker":
+            # ... (existing Docker stop logic) ...
+            container = client.containers.get(container_name)
+            container.stop()
+            container.remove()
+
+        elif db_machine.provider == "virtualbox":
+            vm_name = db_machine.source_identifier
+            virtualbox_manager.vbox_manager.stop_vm(vm_name)
+
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported machine provider: {db_machine.provider}")
+
+        # Clear the IP address from the database
+        db_machine.ip_address = None
+        # ... (db commit/refresh) ...
+        return {"message": f"Machine {db_machine.name} stopped and removed"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+</code></pre>
+                        <h4>`main.py` - Dispatching Logic Example (`restart_machine`):</h4>
+                        <pre><code># D:/Think/vulnverse/main.py (relevant part of restart_machine)
+    # ... (initial checks) ...
+    try:
+        if db_machine.provider == "docker":
+            # Stop the machine
+            stop_machine(machine_id, db)
+            # Start the machine
+            start_machine(machine_id, db)
+
+        elif db_machine.provider == "virtualbox":
+            vm_name = db_machine.source_identifier
+            snapshot_name = None
+            if db_machine.config_json:
+                config = json.loads(db_machine.config_json)
+                snapshot_name = config.get("snapshot_name")
+
+            if snapshot_name:
+                virtualbox_manager.vbox_manager.reset_vm(vm_name, snapshot_name)
+            else:
+                # If no snapshot, just stop and start
+                virtualbox_manager.vbox_manager.stop_vm(vm_name)
+                virtualbox_manager.vbox_manager.start_vm(vm_name)
+
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported machine provider: {db_machine.provider}")
+
+        return {"message": f"Machine {db_machine.name} restarted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+</code></pre>
+                    </li>
+                    <li><strong>Frontend (`AddMachine.jsx`, `EditMachine.jsx`):</strong>
+                        <p>The machine creation and editing forms were updated to provide an intuitive interface for selecting the machine provider and configuring its specific details.</p>
+                        <ul>
+                            <li>**Provider Selection:** A new dropdown was added for `Provider` (Docker or VirtualBox).</li>
+                            <li>**Source Identifier:** The "Docker Image" input field was replaced with a more generic "Source Identifier" field, whose label dynamically changes based on the selected provider (e.g., "Docker Image" for Docker, "VM Name" for VirtualBox).</li>
+                            <li>**Config JSON:** A conditional "Config JSON" textarea was added, visible only when "VirtualBox" is selected. This allows users to input JSON for VM-specific settings like snapshot names (e.g., `{"snapshot_name": "CleanState"}`).</li>
+                            <li>**Data Handling:** The frontend now sends the `config_json` content as a raw string to the backend, and the backend is responsible for parsing it. This resolved a `422 Unprocessable Entity` error where the frontend was incorrectly parsing the JSON before sending it.</li>
+                        </ul>
+                        <h4>Frontend Form Example (`AddMachine.jsx` relevant JSX):</h4>
+                        <pre><code>&lt;div className="form-group"&gt;
+  &lt;label&gt;Provider&lt;/label&gt;
+  &lt;select name="provider" value={newMachine.provider} onChange={handleProviderChange} required&gt;
+    &lt;option value="docker"&gt;Docker&lt;/option&gt;
+    &lt;option value="virtualbox"&gt;VirtualBox&lt;/option&gt;
+  &lt;/select&gt;
+&lt;/div&gt;
+
+&lt;div className="form-group"&gt;
+  &lt;label&gt;{newMachine.provider === 'docker' ? 'Docker Image' : 'VM Name'}&lt;/label&gt;
+  &lt;input type="text" name="source_identifier" placeholder={newMachine.provider === 'docker' ? "e.g., vuln-app:latest" : "e.g., MyVulnerableVM"} value={newMachine.source_identifier} onChange={handleInputChange} required /&gt;
+&lt;/div&gt;
+
+{newMachine.provider === 'virtualbox' && (
+  &lt;div className="form-group"&gt;
+    &lt;label&gt;Config JSON (for VirtualBox)&lt;/label&gt;
+    &lt;textarea name="config_json" placeholder='e.g., {"snapshot_name": "CleanState"}' value={newMachine.config_json} onChange={handleInputChange}&gt;&lt;/textarea&gt;
+    &lt;small&gt;Enter JSON for VirtualBox specific settings like snapshot name.&lt;/small&gt;
+  &lt;/div&gt;
+)}
+</code></pre>
+                    </li>
+                    <li><strong>Frontend (`MachineDetail.jsx`):</strong> The machine detail view was updated to display the `Provider` and `Source Identifier` fields. The "Start Machine" button's label was made dynamic, showing "Start Docker Container" or "Start VirtualBox VM" based on the machine's provider.</li>
+                </ul>
+                <p><strong>Impact:</strong> This refactoring significantly improved the platform's extensibility and flexibility. It now natively supports different types of vulnerable machines, starting with Docker containers and VirtualBox VMs, laying a strong foundation for future expansion to other virtualization technologies.</p>
+            </section>
+
+            <section id="frontend-error-clarity">
+                <h3>5.5. Frontend Error Message Clarity</h3>
+                <p><strong>Problem:</strong> When backend validation errors (e.g., `422 Unprocessable Entity`) occurred, the frontend displayed generic "Failed to add/update machine!" messages or even crashed, providing little useful feedback to the user.</p>
+                <p><strong>Reason:</strong> FastAPI's `422` responses contain a structured JSON object with detailed validation errors (an array of objects). The frontend was attempting to display this complex object directly as a React child, which is not allowed, or was only showing a generic message.</p>
+                <p><strong>Solution:</strong> The `catch` blocks in `AddMachine.jsx` and `EditMachine.jsx` were enhanced to parse and format the `error.response.data.detail` (which is an array of validation errors) into a human-readable string.</p>
+                <pre><code>// Example of improved error handling in frontend catch block
+    } catch (error) {
+      console.error('Failed to add machine:', error);
+      let errorMessage = 'Failed to add machine!';
+      if (error.response && error.response.data && error.response.data.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map(err => `${err.loc.join('.')} - ${err.msg}`).join('; ');
+        } else if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        }
+      }
+      showNotification(errorMessage, 'error');
+      // ... rest of error handling ...
+    }</code></pre>
+                <p><strong>Impact:</strong> Users now receive precise and actionable feedback on form submission errors, greatly improving the user experience and simplifying debugging for both users and developers.</p>
+            </section>
+
+            <section id="virtualbox-ip-retrieval">
+                <h3>5.6. VirtualBox IP Retrieval &amp; Guest Additions</h3>
+                <p><strong>Problem:</strong> After starting a VirtualBox VM from VulnVerse, the backend failed to retrieve its IP address, resulting in a `500 Internal Server Error` with the message "Could not retrieve IP for VirtualBox VM...".</p>
+                <p><strong>Reason:</strong> The `virtualbox_manager.py` module attempts to get the VM's IP using `VBoxManage guestproperty get <vm_name> /VirtualBox/GuestInfo/Net/0/V4/IP`. This command relies on VirtualBox Guest Additions being correctly installed and running inside the guest VM (e.g., Metasploitable2).</p>
+                <p><strong>Solution:</strong> Manual installation and verification of VirtualBox Guest Additions within the guest VM.</p>
+                <ul>
+                    <li>Start the VM directly in VirtualBox.</li>
+                    <li>Log in to the VM.</li>
+                    <li>In VirtualBox menu, go to `Devices` -> `Insert Guest Additions CD image...`.</li>
+                    <li>Inside the VM, mount the CD image and run the installer (e.g., `sudo ./VBoxLinuxAdditions.run`). This often requires installing build tools like `build-essential` and `dkms` first.</li>
+                    <li>Reboot the VM after installation.</li>
+                    <li>Verify the VM has an IP using `ifconfig` inside the VM.</li>
+                </ul>
+                <p><strong>Impact:</strong> Enables the backend to successfully obtain and display the IP addresses of VirtualBox VMs, making them accessible to players via the VPN. This is a critical step for the usability of VirtualBox-based machines.</p>
+            </section>
+
+            <div class="summary-note">
+                <h4>Summary of Update 2.0</h4>
+                <p>Update 2.0 has significantly advanced the VulnVerse platform by introducing a robust changelog system, enhancing database management with soft-deletion for flags, and crucially, generalizing machine provisioning to support both Docker containers and VirtualBox VMs. This involved a comprehensive refactoring of the backend's data models, API endpoints, and the introduction of a VirtualBox management module. Frontend components were updated to provide intuitive interfaces for these new features and to deliver clearer error feedback. While addressing several technical challenges, including Alembic migrations and CORS, this update lays a strong foundation for future extensibility and a more versatile CTF environment.</p>
+            </div>
+            <div class="section-navigation">
+                <a href="#update-2-0">Previous Section</a>
+                <a href="#integration-flow">Next Section</a>
+            </div>
+        </section>
+
+        <section id="integration-flow">
+            <h2>V. Frontend-Backend-Docker-VPN Integration Flow</h2>
+            <p>This section provides a holistic view of how all the components interact to deliver the VulnVerse platform's functionality.</p>
+
+            <div class="visual-idea">
+                <h4>Visual Element Idea: Comprehensive System Diagram</h4>
+                <p><strong>Diagram:</strong> A large, comprehensive diagram showing the entire system. Use arrows to indicate data flow and interactions. Color-code each major component (Frontend, Backend, Database, Docker, OpenVPN). Highlight key data points (JWT, IP Address, Flag).</p>
+            </div>
+
+            <h4>Detailed Flow:</h4>
+
+            <ol>
+                <li>
+                    <h5>User Accesses Frontend:</h5>
+                    <ul>
+                        <li>A user opens their web browser and navigates to <code>http://localhost:5173</code> (React Frontend).</li>
+                        <li><strong>Frontend (React):</strong> Displays Login/Registration page.</li>
+                    </ul>
+                </li>
+                <li>
+                    <h5>User Registration/Login:</h5>
+                    <ul>
+                        <li><strong>User:</strong> Enters username/password in the Frontend.</li>
+                        <li><strong>Frontend (React):</strong> Sends <code>POST</code> request to <code>http://127.0.0.1:8000/users/</code> (for registration) or <code>http://127.0.0.1:8000/token</code> (for login) using <code>axios</code>.</li>
+                        <li><strong>Backend (FastAPI - <code>main.py</code>):</strong>
+                            <ul>
+                                <li>Receives request.</li>
+                                <li><strong>CORS Middleware:</strong> Checks <code>allow_origins</code>, <code>allow_methods</code>, <code>allow_headers</code>.</li>
+                                <li><strong>Registration (<code>/users/</code>):</strong> Calls <code>auth.get_password_hash()</code> to hash the password, then saves <code>username</code> and <code>hashed_password</code> to <code>PostgreSQL</code> via <code>models.User</code> and <code>database.get_db()</code>.</li>
+                                <li><strong>Login (<code>/token</code>):</strong> Calls <code>auth.verify_password()</code> to check credentials. If valid, calls <code>auth.create_access_token()</code> to generate a JWT.</li>
+                                <li>Sends <code>200 OK</code> response with <code>access_token</code> (for login) or <code>schemas.User</code> object (for registration).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Frontend (React):</strong> Stores <code>access_token</code> in <code>localStorage</code> and redirects to <code>/dashboard</code>.</li>
+                    </ul>
+                </li>
+                <li>
+                    <h5>Viewing Machines (Dashboard):</h5>
+                    <ul>
+                        <li><strong>Frontend (React - <code>Dashboard.jsx</code>):</strong> On component mount, sends <code>GET</code> request to <code>http://127.0.0.1:8000/machines/</code>.</li>
+                        <li><strong>Authentication:</strong> Attaches <code>Authorization: Bearer &lt;access_token&gt;</code> header to the request.</li>
+                        <li><strong>Backend (FastAPI - <code>main.py</code>):</strong>
+                            <ul>
+                                <li>Receives request.</li>
+                                <li><code>auth.get_current_user</code> dependency validates the JWT. If valid, <code>current_user</code> (a <code>models.User</code> object) is available.</li>
+                                <li>Queries <code>PostgreSQL</code> for <code>Machine</code> records via <code>models.Machine</code> and <code>database.get_db()</code>.</li>
+                                <li>Returns a list of <code>schemas.Machine</code> objects (including <code>ip_address</code> if available).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Frontend (React):</strong> Displays the list of machines, their descriptions, and their current IP addresses (if started).</li>
+                    </ul>
+                </li>
+                <li>
+                    <h5>Starting a Vulnerable Machine:</h5>
+                    <ul>
+                        <li><strong>User:</strong> Clicks "Start Machine" button on the Frontend.</li>
+                        <li><strong>Frontend (React - <code>Dashboard.jsx</code>):</strong> Sends <code>POST</code> request to <code>http://127.0.0.1:8000/machines/{machine_id}/start</code> with <code>access_token</code>.</li>
+                        <li><strong>Backend (FastAPI - <code>main.py</code>):</strong>
+                            <ul>
+                                <li>Authenticates user via <code>auth.get_current_user</code>.</li>
+                                <li>Calls <code>get_or_create_docker_network()</code> to ensure <code>vulnverse_network</code> exists.</li>
+                                <li><strong>Docker SDK (<code>python-docker</code>):</strong>
+                                    <ul>
+                                        <li>Uses <code>client.containers.run()</code> to start a new Docker container from <code>machine.docker_image</code> (e.g., <code>vuln-app:latest</code>).</li>
+                                        <li>Connects the container to <code>vulnverse_network</code>.</li>
+                                        <li>Retrieves the container's assigned IP address within <code>vulnverse_network</code> (e.g., <code>172.20.0.2</code>).</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Database:</strong> Updates the <code>ip_address</code> field for the <code>Machine</code> record in <code>PostgreSQL</code>.</li>
+                                <li>Returns success message.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Frontend (React):</strong> Re-fetches machine list, updating the UI to display the newly assigned IP address.</li>
+                    </ul>
+                </li>
+                <li>
+                    <h5>Downloading VPN Configuration:</h5>
+                    <ul>
+                        <li><strong>User:</strong> Clicks "Download VPN Config" button on the Frontend.</li>
+                        <li><strong>Frontend (React - <code>Dashboard.jsx</code>):</strong> Sends <code>POST</code> request to <code>http://127.0.0.1:8000/vpn/generate-config</code> with <code>access_token</code>.</li>
+                        <li><strong>Backend (FastAPI - <code>main.py</code>):</strong>
+                            <ul>
+                                <li>Authenticates user.</li>
+                                <li>Reads the pre-generated <code>client.ovpn</code> file from <code>D:/Think/vulnverse/openvpn-data/client.ovpn</code>.</li>
+                                <li>Returns the file content as a <code>PlainTextResponse</code> with <code>application/octet-stream</code> media type.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Frontend (React):</strong> Receives the file content and triggers a browser download.</li>
+                    </ul>
+                </li>
+                <li>
+                    <h5>Connecting to VPN (from Kali VM):</h5>
+                    <ul>
+                        <li><strong>User:</strong> Imports <code>client.ovpn</code> into OpenVPN client on Kali VM.</li>
+                        <li><strong>OpenVPN Client (Kali):</strong> Connects to the OpenVPN Server (Docker container) on the Windows host (e.g., <code>udp://192.168.1.100:1194</code>).</li>
+                        <li><strong>OpenVPN Server (Docker Container):</strong> Authenticates the client using certificates.</li>
+                        <li><strong>Network Routing:</strong> The OpenVPN server routes traffic from the VPN client (e.g., <code>10.8.0.6</code>) to the <code>vulnverse_network</code> (e.g., <code>172.20.0.0/16</code>) where the vulnerable machines reside.</li>
+                        <li><strong>Traffic Flow:</strong> Kali VM -&gt; VPN Tunnel -&gt; OpenVPN Server (Docker) -&gt; <code>vulnverse_network</code> (Docker) -&gt; Vulnerable Machine (Docker).</li>
+                    </ul>
+                </li>
+                <li>
+                    <h5>Attacking the Vulnerable Machine (from Kali VM):</h5>
+                    <ul>
+                        <li><strong>User (Kali VM):</strong> Pings or accesses the web service of the vulnerable machine using its Docker network IP (e.g., <code>ping 172.20.0.2</code>, <code>http://172.20.0.2:8080</code>).</li>
+                    </ul>
+                </li>
+                <li>
+                    <h5>Submitting a Flag:</h5>
+                    <ul>
+                        <li><strong>User:</strong> Finds a flag on the vulnerable machine and enters it into the Frontend's "Submit Flag" prompt.</li>
+                        <li><strong>Frontend (React - <code>Dashboard.jsx</code>):</strong> Sends <code>POST</code> request to <code>http://127.0.0.1:8000/submissions/</code> with <code>machine_id</code>, <code>flag</code>, and <code>access_token</code>.</li>
+                        <li><strong>Backend (FastAPI - <code>main.py</code>):</strong>
+                            <ul>
+                                <li>Authenticates user.</li>
+                                <li>Validates <code>machine_id</code> and <code>flag</code> against <code>PostgreSQL</code> (<code>models.Flag</code>).</li>
+                                <li>Checks for duplicate submissions by the same user for the same machine.</li>
+                                <li>If valid, records the submission in <code>PostgreSQL</code> (<code>models.Submission</code>).</li>
+                                <li>Returns success/failure message.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Frontend (React):</strong> Displays alert based on backend response.</li>
+                    </ul>
+                </li>
+            </ol>
+            <div class="section-navigation">
+                <a href="#phase5">Previous Section</a>
+                <a href="#troubleshooting">Next Section</a>
+            </div>
+        </section>
+
+        <section id="troubleshooting">
+            <h2>VI. Troubleshooting Recap (Detailed)</h2>
+            <p>This section summarizes the common issues encountered during development and their solutions, providing insights into debugging and problem-solving.</p>
+
+            <div class="troubleshooting-box">
+                <h4>1. Alembic Migration Message Parsing (Windows CMD):</h4>
+                <ul>
+                    <li><strong>Problem:</strong> <code>alembic revision --autogenerate -m "My message with spaces"</code> failed with "unrecognized arguments" on Windows Command Prompt.</li>
+                    <li><strong>Reason:</strong> Windows CMD interprets spaces differently than Unix shells, causing the message string to be split.</li>
+                    <li><strong>Solution:</strong> Use underscores instead of spaces in the message, or ensure the entire message is correctly quoted and escaped if necessary. Example: <code>alembic revision --autogenerate -m "My_message_with_underscores"</code>.</li>
+                </ul>
+            </div>
+
+            <div class="troubleshooting-box">
+                <h4>2. <code>psycopg2.OperationalError: password authentication failed</code>:</h4>
+                <ul>
+                    <li><strong>Problem:</strong> FastAPI backend failed to connect to PostgreSQL.</li>
+                    <li><strong>Reason:</strong> Incorrect username or password in the <code>DATABASE_URL</code> in <code>D:\Think\vulnverse\.env</code>, or the PostgreSQL server was not running or accessible.</li>
+                    <li><strong>Solution:</strong> Verify <code>DATABASE_URL</code> credentials against PostgreSQL user settings. Ensure PostgreSQL Docker container (<code>docker start vulnverse-postgres</code>) or local service is running.</li>
+                </ul>
+            </div>
+
+            <div class="troubleshooting-box">
+                <h4>3. <code>FastAPIError: Invalid args for response field Hint: check that &lt;class 'models.User'&gt; is a valid Pydantic field type.</code>:</h4>
+                <ul>
+                    <li><strong>Problem:</strong> Attempting to use SQLAlchemy ORM models directly as FastAPI <code>response_model</code> types.</li>
+                    <li><strong>Reason:</strong> FastAPI expects Pydantic models for request/response validation and serialization. SQLAlchemy models are for database interaction.</li>
+                    <li><strong>Solution:</strong> Created <code>schemas.py</code> to define explicit Pydantic models (e.g., <code>schemas.User</code>, <code>schemas.Machine</code>). Added <code>class Config: orm_mode = True</code> (or <code>from_attributes = True</code> in Pydantic v2) to these Pydantic models to enable automatic conversion from SQLAlchemy ORM objects. Updated FastAPI endpoints to use <code>schemas</code> models for <code>response_model</code> and request bodies.</li>
+                </ul>
+            </div>
+
+            <div class="troubleshooting-box">
+                <h4>4. <code>RuntimeError: Form data requires "python-multipart" to be installed.</code>:</h4>
+                <ul>
+                    <li><strong>Problem:</strong> FastAPI endpoints using <code>OAuth2PasswordRequestForm</code> (like <code>/token</code>) failed.</li>
+                    <li><strong>Reason:</strong> The <code>python-multipart</code> library, required for parsing form data, was missing.</li>
+                    <li><strong>Solution:</strong> Installed the missing dependency: <code>pip install python-multipart</code>.</li>
+                </ul>
+            </div>
+
+            <div class="troubleshooting-box">
+                <h4>5. <code>405 Method Not Allowed</code> (CORS Preflight Error):</h4>
+                <ul>
+                    <li><strong>Problem:</strong> Frontend requests (especially <code>POST</code>) to the backend failed with a <code>405</code> error, often related to <code>OPTIONS</code> preflight requests.</li>
+                    <li><strong>Reason:</strong> The browser's Same-Origin Policy prevents direct cross-origin requests. A preflight <code>OPTIONS</code> request is sent first to check CORS headers. If the backend doesn't respond correctly, the actual request is blocked.</li>
+                    <li><strong>Solution:</strong> Added <code>CORSMiddleware</code> to <code>main.py</code> and configured <code>allow_origins</code>, <code>allow_methods</code>, <code>allow_headers</code> to explicitly permit requests from the frontend's origin (<code>http://localhost:5173</code>, <code>http://127.0.0.1:5173</code>).</li>
+                </ul>
+            </div>
+
+            <div class="troubleshooting-box">
+                <h4>6. <code>TypeError: crypto.hash is not a function</code> (Vite/Node.js Incompatibility):</h4>
+                <ul>
+                    <li><strong>Problem:</strong> Frontend development server (<code>npm run dev</code>) failed to start.</li>
+                    <li><strong>Reason:</strong> An older version of Vite (<code>^7.1.0</code>) used a Node.js internal <code>crypto.hash</code> function that was removed in newer Node.js versions (<code>v21.5.0</code>).</li>
+                    <li><strong>Solution:</strong> Updated Vite and its related plugin in <code>package.json</code> to compatible versions (<code>"vite": "^5.0.0"</code>, <code>"@vitejs/plugin-react": "^4.3.1"</code>) and re-ran <code>npm install</code>.</li>
+                </ul>
+            </div>
+
+            <div class="troubleshooting-box">
+                <h4>7. Frontend Not Displaying Machine IP After Start/Stop:</h4>
+                <ul>
+                    <li><strong>Problem:</strong> The <code>ip_address</code> on the dashboard didn't update immediately after starting/stopping a machine.</li>
+                    <li><strong>Reason:</strong> The <code>Dashboard.jsx</code> component fetched machine data only once on mount. Backend updates were not reflected in the UI until a manual page refresh.</li>
+                    <li><strong>Solution:</strong> Modified <code>handleStartMachine</code> and <code>handleStopMachine</code> functions in <code>Dashboard.jsx</code> to call <code>fetchMachines()</code> again after successfully starting or stopping a machine. This re-fetches the latest data from the backend and updates the UI.</li>
+                </ul>
+            </div>
+
+            <div class="troubleshooting-box">
+                <h4>8. <code>401 Unauthorized</code> for VPN Download/Other Endpoints:</h4>
+                <ul>
+                    <li><strong>Problem:</strong> Requests to authenticated endpoints failed with <code>401</code>.</li>
+                    <li><strong>Reason:</strong> The JWT access token stored in <code>localStorage</code> had expired (default 30 minutes).</li>
+                    <li><strong>Solution:</strong> Log out and log back in to obtain a new, valid token. Increased <code>ACCESS_TOKEN_EXPIRE_MINUTES</code> in <code>auth.py</code> to 1440 minutes (24 hours) for longer development sessions.</li>
+                </ul>
+            </div>
+
+            <div class="troubleshooting-box">
+                <h4>9. <code>ResponseValidationError</code> for Flag Submission (<code>machine_id</code> missing):</h4>
+                <ul>
+                    <li><strong>Problem:</strong> Submitting a flag resulted in a validation error indicating <code>machine_id</code> was missing.</li>
+                    <li><strong>Reason:</strong> The <code>SubmissionCreate</code> Pydantic schema in <code>schemas.py</code> did not include <code>machine_id</code>, so FastAPI was not expecting it in the request body.</li>
+                    <li><strong>Solution:</strong> Added <code>machine_id: int</code> to the <code>SubmissionCreate</code> schema in <code>schemas.py</code>.</li>
+                </ul>
+            </div>
+
+            <div class="troubleshooting-box">
+                <h4>10. <code>curl</code> Command Parsing Issues (Windows CMD):</h4>
+                <ul>
+                    <li><strong>Problem:</strong> <code>curl</code> commands with line continuations (<code>\</code>) or complex JSON payloads failed to parse correctly on Windows Command Prompt.</li>
+                    <li><strong>Reason:</strong> Windows CMD handles <code>\</code> differently than Unix shells.</li>
+                    <li><strong>Solution:</strong> Run <code>curl</code> commands as a single line, ensuring no line breaks or unescaped special characters. For complex JSON, ensure it's correctly escaped or use a tool like Postman/Insomnia.</li>
+                </ul>
+            </div>
+            <div class="section-navigation">
+                <a href="#integration-flow">Previous Section</a>
+                <a href="#conclusion">Next Section</a>
+            </div>
+        </section>
+
+        <section id="conclusion">
+            <h2>VII. Conclusion</h2>
+            <p>We have successfully built the foundational components of the VulnVerse platform, demonstrating a comprehensive understanding of modern full-stack development, containerization, and networking:</p>
+            <ul>
+                <li>A robust <strong>FastAPI backend</strong> handling user authentication (JWT), machine management (Docker SDK), and flag submissions.</li>
+                <li>A <strong>PostgreSQL database</strong> for persistent data storage, with schema evolution managed by Alembic migrations.</li>
+                <li><strong>Dockerized vulnerable labs</strong> providing isolated and reproducible hacking environments, connected via a custom Docker network.</li>
+                <li>A <strong>Dockerized OpenVPN server</strong> enabling secure network access for players to the lab environment.</li>
+                <li>A basic <strong>React frontend</strong> for user interaction, allowing login, registration, machine control, VPN config download, and flag submission.</li>
+                <li><strong>Seamless integration</strong> between all these components, from frontend API calls to backend Docker interactions and VPN routing.</li>
+            </ul>
+
+            <p>This project serves as a strong base for further expansion and learning. Potential future enhancements include:</p>
+            <ul>
+                <li><strong>Scoring and Leaderboards:</strong> Implement a scoring system for flag submissions and display a leaderboard.</li>
+                <li><strong>More Diverse Labs:</strong> Create a variety of vulnerable machines (e.g., web, binary exploitation, misconfigurations).</li>
+                <li><strong>Dynamic VPN Client Generation:</strong> Instead of a single <code>client.ovpn</code>, generate unique client certificates and <code>.ovpn</code> files for each user.</li>
+                <li><strong>Admin Panel:</strong> A dedicated interface for administrators to manage users, machines, and flags.</li>
+                <li><strong>Machine Reset/Rebuild:</strong> Functionality to reset a vulnerable machine to its initial state.</li>
+                <li><strong>Improved Frontend UI/UX:</strong> Enhance the user interface with better styling, notifications, and user feedback.</li>
+                <li><strong>Container Port Mapping:</strong> Dynamically assign and display the exposed host port for web services on vulnerable machines (if direct VPN access isn't the only method).</li>
+            </ul>
+
+            <p>This study guide should provide you with a deep understanding of each component and how they fit together to form a complete, functional ethical hacking platform.</p>
+
+            <div class="visual-idea">
+                <h4>How to use this study guide for visual learning:</h4>
+                <p>As mentioned, I cannot directly embed images or color-code text. However, you can use this HTML file as a blueprint:</p>
+                <ol>
+                    <li>
+                        <h5>Convert to PDF/DOCX (Optional):</h5>
+                        <p>Use a tool like <a href="https://pandoc.org/installing.html" target="_blank">Pandoc</a> to convert this <code>.html</code> file into a PDF or DOCX.</p>
+                        <pre><code>pandoc D:\Think\vulnverse\study\project_study_guide.html -o D:\Think\vulnverse\study\project_study_guide.pdf --pdf-engine=xelatex</code></pre>
+                        <p><em>(You might need to install a LaTeX distribution like TeX Live or MiKTeX for PDF generation.)</em></p>
+                    </li>
+                    <li>
+                        <h5>Manual Annotation/Drawing:</h5>
+                        <ul>
+                            <li><strong>Diagrams:</strong> For each "Visual Element Idea" section, draw the described diagram. Use different shapes and colors for each component (e.g., blue for Frontend, green for Backend, red for Docker, yellow for Database, purple for VPN). Draw arrows to show data flow.</li>
+                            <li><strong>Color Coding/Highlighting:</strong> When reviewing the text, use highlighters or digital annotation tools to color-code different concepts. For example:
+                                <ul>
+                                    <li><strong>FastAPI keywords:</strong> Green</li>
+                                    <li><strong>SQLAlchemy/Alembic keywords:</strong> Blue</li>
+                                    <li><strong>Docker commands/concepts:</strong> Red</li>
+                                    <li><strong>OpenVPN concepts:</strong> Purple</li>
+                                    <li><strong>Frontend (React) concepts:</strong> Orange</li>
+                                    <li><strong>Troubleshooting points:</strong> Yellow</li>
+                                </ul>
+                            </li>
+                            <li><strong>Code Blocks:</strong> You can use syntax highlighting in your text editor when viewing the <code>.html</code> file, or in the PDF/DOCX if your conversion tool supports it.</li>
+                        </ul>
+                    </li>
+                </ol>
+                <p>This approach will allow you to create a truly personalized and visually rich study resource based on the detailed content provided.</p>
+            </div>
+            <div class="section-navigation">
+                <a href="#troubleshooting">Previous Section</a>
+                <a href="#conclusion" class="disabled">Next Section</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 VulnVerse Project. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        // Check for saved theme preference on load
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            body.classList.add(savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            // If no saved theme, check system preference
+            body.classList.add('dark-mode');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light-mode');
+            } else {
+                body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark-mode');
+            }
+        });
+    </script>
+</body>
+</html>

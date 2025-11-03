@@ -1,0 +1,77 @@
+version: '3.8'
+
+networks:
+  vulnverse_network:
+    external: true
+
+services:
+  postgres:
+    image: postgres
+    container_name: vulnverse-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adityA10!
+      POSTGRES_DB: vulnverse_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - vulnverse_network
+    restart: unless-stopped
+
+  openvpn:
+    image: kylemanna/openvpn
+    container_name: openvpn_server
+    ports:
+      - "1194:1194/udp"
+    volumes:
+      - openvpn_data:/etc/openvpn
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=1
+      - net.ipv6.conf.default.forwarding=1
+    networks:
+      - vulnverse_network
+    environment:
+      - EASYRSA_BATCH=true
+    command: sh -c 'if [ ! -f /etc/openvpn/ovpn_env.sh ]; then ovpn_genconfig -u udp://127.0.0.1 && ovpn_initpki nopass && easyrsa build-client-full client nopass && ovpn_getclient client > /etc/openvpn/client.ovpn; fi && ovpn_run'
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: vulnverse-backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://admin:adityA10!@postgres:5432/vulnverse_db
+      SECRET_KEY: your-secret-key  # Replace with a strong, unique secret key
+      DOCKER_NETWORK_NAME: vulnverse_network
+    depends_on:
+      - postgres
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Mount the Docker socket
+    networks:
+      - vulnverse_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    container_name: vulnverse-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - vulnverse_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  openvpn_data:
