@@ -10,8 +10,8 @@ services:
     container_name: vulnverse-postgres
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: adityA10!
-      POSTGRES_DB: vulnverse_db
+      POSTGRES_PASSWORD: addpass  #add your password
+      POSTGRES_DB: hackharbor_db
     ports:
       - "5432:5432"
     volumes:
@@ -36,7 +36,7 @@ services:
     networks:
       - vulnverse_network
     environment:
-      - EASYRSA_BATCH=true
+      - EASYRSA_BATCH=true   # cahnge the ip below to your public ip
     command: sh -c 'if [ ! -f /etc/openvpn/ovpn_env.sh ]; then ovpn_genconfig -u udp://127.0.0.1 && ovpn_initpki nopass && easyrsa build-client-full client nopass && ovpn_getclient client > /etc/openvpn/client.ovpn; fi && ovpn_run'
     restart: unless-stopped
 
@@ -48,7 +48,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://admin:adityA10!@postgres:5432/vulnverse_db
+      DATABASE_URL: postgresql://admin:addpass@postgres:5432/hackharbor_db
       SECRET_KEY: your-secret-key  # Replace with a strong, unique secret key
       DOCKER_NETWORK_NAME: vulnverse_network
     depends_on:
