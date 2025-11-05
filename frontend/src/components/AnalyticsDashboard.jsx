@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useNotification } from './Notification';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { AuthContext } from '../contexts/AuthContext';
+import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,11 +11,14 @@ import {
   PointElement,
   LineElement,
   BarElement,
-  ArcElement,
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
+import { FaUsers, FaServer, FaFlag, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import AdminPageLayout from './AdminPageLayout';
 
 ChartJS.register(
   CategoryScale,
@@ -22,262 +26,191 @@ ChartJS.register(
   PointElement,
   LineElement,
   BarElement,
-  ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
-import './AnalyticsDashboard.css';
+const StatCard = ({ title, value, trend, icon }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    className="rounded-lg bg-gray-800 p-6 shadow-lg"
+  >
+    <div className="flex items-center">
+      <div className="mr-4 text-4xl text-purple-500">{icon}</div>
+      <div>
+        <p className="text-3xl font-bold text-white">{value !== undefined && value !== null ? value : 0}</p>
+        <p className="text-sm text-gray-400">{title}</p>
+      </div>
+    </div>
+    {trend && (
+      <div className={`mt-4 flex items-center text-sm ${trend.includes('+') ? 'text-green-400' : 'text-red-400'}`}>
+        {trend.includes('+') ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
+        {trend}
+      </div>
+    )}
+  </motion.div>
+);
 
-ChartJS.defaults.color = '#c5c6c7';
-ChartJS.defaults.borderColor = '#2a2e33';
-
-function AnalyticsDashboard() {
+const AnalyticsDashboard = () => {
   const navigate = useNavigate();
   const addNotification = useNotification();
+  const { user } = useContext(AuthContext);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const fetchAnalyticsData = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-      const response = await api.get('/admin/analytics', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setAnalyticsData(response.data);
-      setError(null);
-    } catch (err) {
-      console.error('Failed to fetch analytics data:', err);
-      setError('Failed to load analytics data. Please try again.');
-      if (err.response && err.response.status === 401 || err.response.status === 403) {
-        addNotification('Access Denied: Not authorized for analytics.', 'error');
-        navigate('/login');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [dateRange, setDateRange] = useState('30');
 
   useEffect(() => {
-    // Check if user is admin on component mount
-    const checkAdmin = async () => {
+    if (user && user.role !== 'admin') {
+      addNotification('Access Denied: Not an administrator.', 'error');
+      navigate('/dashboard');
+    }
+  }, [user, navigate, addNotification]);
+
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem('access_token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-        const response = await api.get('/users/me/', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await api.get(`/admin/analytics?days=${dateRange}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        if (response.data.role !== 'admin') {
-          addNotification('Access Denied: Not an administrator.', 'error');
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        console.error('Failed to verify admin status:', error);
-        addNotification('Failed to verify admin status.', 'error');
-        navigate('/login');
+        setAnalyticsData(response.data);
+      } catch (err) {
+        console.error('Failed to fetch analytics data:', err);
+        addNotification('Failed to load analytics data.', 'error');
+      } finally {
+        setLoading(false);
       }
     };
-    checkAdmin();
+
     fetchAnalyticsData();
-  }, [navigate]);
+  }, [dateRange]);
+
+  const lineChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+    },
+    scales: {
+      x: { ticks: { color: '#9CA3AF' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+      y: { ticks: { color: '#9CA3AF' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, beginAtZero: true },
+    },
+  };
+
+  const barChartOptions = {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+    },
+    scales: {
+      x: { ticks: { color: '#9CA3AF' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+      y: { ticks: { color: '#9CA3AF' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+    },
+  };
 
   if (loading) {
-    return <div>Loading analytics data...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="flex h-screen items-center justify-center text-white">Loading...</div>;
   }
 
   if (!analyticsData) {
-    return <div>No analytics data available.</div>;
+    return <div className="flex h-screen items-center justify-center text-white">No data available.</div>;
   }
 
-  // Define KPIs based on analyticsData
-  const kpis = analyticsData ? [
-    { title: 'Total Users', value: analyticsData.total_users || 0 },
-    { title: 'Total Machines', value: analyticsData.total_machines || 0 },
-    { title: 'Total Submissions', value: analyticsData.total_submissions || 0 },
-  ] : [];
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          color: '#c5c6c7',
-        },
-      },
-      title: {
-        display: false,
-        text: 'Chart Title',
-        color: '#c5c6c7',
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: '#c5c6c7',
-        },
-        grid: {
-          color: '#2a2e33',
-        },
-      },
-      y: {
-        ticks: {
-          color: '#c5c6c7',
-        },
-        grid: {
-          color: '#2a2e33',
-        },
-      },
-    },
-  };
-
-  // Prepare data for charts
   const userRegistrationData = {
-    labels: analyticsData.user_registration_trends.map(item => item.date),
+    labels: analyticsData.user_registration_trends.map(item => new Date(item.date).toLocaleDateString()),
     datasets: [
       {
         label: 'New Users',
         data: analyticsData.user_registration_trends.map(item => item.count),
-        fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const submissionTrendsData = {
-    labels: analyticsData.submission_trends.map(item => item.date),
-    datasets: [
-      {
-        label: 'Submissions',
-        data: analyticsData.submission_trends.map(item => item.count),
-        fill: false,
-        borderColor: 'rgb(153, 102, 255)',
-        tension: 0.1,
+        borderColor: '#8B5CF6',
+        backgroundColor: 'rgba(139, 92, 246, 0.2)',
+        fill: true,
+        tension: 0.4,
       },
     ],
   };
 
   const machinePopularityData = {
-    labels: analyticsData.machine_popularity.map(item => item.name),
+    labels: analyticsData.machine_popularity.slice(0, 10).map(item => item.name),
     datasets: [
       {
-        label: 'Submissions',
-        data: analyticsData.machine_popularity.map(item => item.submission_count),
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-      },
-    ],
-  };
-
-  const completionRatesData = {
-    labels: analyticsData.machine_completion_rates.map(item => item.name),
-    datasets: [
-      {
-        label: 'Completion Rate (%)',
-        data: analyticsData.machine_completion_rates.map(item => item.completion_rate),
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.5)',
-          'rgba(54, 162, 235, 0.5)',
-          'rgba(255, 206, 86, 0.5)',
-          'rgba(75, 192, 192, 0.5)',
-          'rgba(153, 102, 255, 0.5)',
-          'rgba(255, 159, 64, 0.5)',
-        ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgba(255, 159, 64, 1)',
-        ],
-        borderWidth: 1,
+        label: 'Solves',
+        data: analyticsData.machine_popularity.slice(0, 10).map(item => item.submission_count),
+        backgroundColor: '#8B5CF6',
       },
     ],
   };
 
   return (
-    <div className="analytics-container">
-      <div className="analytics-header">
-        <h1>Analytics Dashboard</h1>
+    <AdminPageLayout title="Analytics Dashboard">
+      <div className="mb-8 flex items-center justify-end">
+        <select
+          onChange={(e) => setDateRange(e.target.value)}
+          value={dateRange}
+          className="rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+        >
+          <option value="7">Last 7 Days</option>
+          <option value="30">Last 30 Days</option>
+          <option value="90">Last 90 Days</option>
+        </select>
       </div>
 
-      <div className="kpi-grid">
-        {kpis.map(kpi => (
-          <div key={kpi.title} className="kpi-card">
-            <h3>{kpi.title}</h3>
-            <p>{kpi.value}</p>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <StatCard title="Total Users" value={analyticsData.total_users} trend={`+${analyticsData.new_users_trend} this week`} icon={<FaUsers />} />
+        <StatCard title="Total Machines" value={analyticsData.total_machines} trend={`+${analyticsData.new_machines_trend} this week`} icon={<FaServer />} />
+        <StatCard title="Total Submissions" value={analyticsData.total_submissions} trend={`+${analyticsData.new_submissions_trend} this week`} icon={<FaFlag />} />
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <div className="rounded-lg bg-gray-800 p-6">
+            <h3 className="mb-4 text-xl font-bold text-white">User Registration Trends</h3>
+            {analyticsData.user_registration_trends && analyticsData.user_registration_trends.length > 0 ? (
+              <Line data={userRegistrationData} options={lineChartOptions} />
+            ) : (
+              <p className="text-gray-400">No user registration data available.</p>
+            )}
           </div>
-        ))}
-      </div>
-
-      <div className="charts-grid">
-        <div className="chart-container">
-          <h3>User Registration Trends</h3>
-          <Line options={chartOptions} data={{
-            labels: analyticsData.user_registration_trends.map(item => item.date),
-            datasets: [{
-              label: 'New Users',
-              data: analyticsData.user_registration_trends.map(item => item.count),
-              borderColor: '#6a44ff',
-              backgroundColor: 'rgba(106, 68, 255, 0.2)',
-              fill: true,
-            }]
-          }} />
         </div>
-
-        <div className="chart-container">
-          <h3>Machine Popularity</h3>
-          <Bar options={chartOptions} data={{
-            labels: analyticsData.machine_popularity.map(item => item.name),
-            datasets: [{
-              label: 'Submissions',
-              data: analyticsData.machine_popularity.map(item => item.submission_count),
-              backgroundColor: '#ff6384',
-            }]
-          }} />
-        </div>
-
-        <div className="chart-container">
-          <h3>Machine Completion Rates</h3>
-          <Doughnut options={{ plugins: { legend: { position: 'right', labels: { color: '#c5c6c7' } } } }} data={{
-            labels: analyticsData.machine_completion_rates.map(item => item.name),
-            datasets: [{
-              data: analyticsData.machine_completion_rates.map(item => item.completion_rate),
-              backgroundColor: ['#36a2eb', '#ffcd56', '#4bc0c0', '#9966ff', '#ff9f40'],
-            }]
-          }} />
-        </div>
-
-        <div className="chart-container">
-          <h3>Top Users by Submissions</h3>
-          <ul>
-            {analyticsData.top_users.map(user => (
-              <li key={user.username}>{user.username}: <strong>{user.submission_count}</strong></li>
-            ))}
-          </ul>
+        <div className="lg:col-span-2">
+          <div className="rounded-lg bg-gray-800 p-6">
+            <h3 className="mb-4 text-xl font-bold text-white">Top Users</h3>
+            {analyticsData.top_users && analyticsData.top_users.length > 0 ? (
+              <ul className="divide-y divide-gray-700">
+                {analyticsData.top_users.map((u, index) => (
+                  <li key={u.username} className="flex items-center justify-between py-2">
+                    <div className="flex items-center">
+                      <span className="mr-4 text-lg font-bold text-gray-400">{index + 1}</span>
+                      <span className="text-white">{u.username}</span>
+                    </div>
+                    <span className="font-semibold text-purple-400">{u.score}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-400">No top users data available.</p>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      <div className="mt-8">
+        <div className="rounded-lg bg-gray-800 p-6">
+          <h3 className="mb-4 text-xl font-bold text-white">Top 10 Most Solved Machines</h3>
+          {analyticsData.machine_popularity && analyticsData.machine_popularity.length > 0 ? (
+            <Bar data={machinePopularityData} options={barChartOptions} />
+          ) : (
+            <p className="text-gray-400">No machine popularity data available.</p>
+          )}
+        </div>
+      </div>
+    </AdminPageLayout>
   );
-}
+};
 
 export default AnalyticsDashboard;

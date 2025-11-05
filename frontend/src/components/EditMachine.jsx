@@ -2,57 +2,69 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 import { useNotification } from './Notification';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaTrash, FaLinux, FaWindows } from 'react-icons/fa';
+import AdminPageLayout from './AdminPageLayout';
 
-function EditMachine() {
-  const { machineId } = useParams();
+const EditMachine = () => {
   const navigate = useNavigate();
-  const addNotification = useNotification();
-
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [sourceIdentifier, setSourceIdentifier] = useState('');
-  const [category, setCategory] = useState('');
+  const { machineId } = useParams();
+  const showNotification = useNotification();
+  const [provider, setProvider] = useState('');
   const [difficulty, setDifficulty] = useState('');
+  const [operatingSystem, setOperatingSystem] = useState('');
   const [flags, setFlags] = useState([{ flag: '' }]);
+  const [machineDetails, setMachineDetails] = useState({
+    name: '',
+    description: '',
+    docker_image: '',
+    vm_name: '',
+    snapshot_name: '',
+    category: '',
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMachineDetails = async () => {
       try {
         const token = localStorage.getItem('access_token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-        const response = await api.get(`/machines/${machineId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await api.get(`/admin/machines/${machineId}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        const machine = response.data;
-        setName(machine.name);
-        setDescription(machine.description || '');
-        setSourceIdentifier(machine.source_identifier || '');
-        setCategory(machine.category || '');
-        setDifficulty(machine.difficulty || '');
-        if (machine.flags && machine.flags.length > 0) {
-          setFlags(machine.flags.map(f => ({ flag: f.flag })));
-        } else {
-          setFlags([{ flag: '' }]);
-        }
+        const data = response.data;
+
+        setMachineDetails({
+          name: data.name,
+          description: data.description,
+          docker_image: data.provider === 'docker' ? data.source_identifier : '',
+          vm_name: data.provider === 'virtualbox' ? data.source_identifier : '',
+          snapshot_name: data.config_json ? JSON.parse(data.config_json).snapshot_name : '',
+          category: data.category,
+        });
+        setProvider(data.provider);
+        setDifficulty(data.difficulty);
+        setOperatingSystem(data.operating_system);
+        setFlags(data.flags.map(f => ({ flag: f.flag })));
       } catch (error) {
         console.error('Failed to fetch machine details:', error);
-        addNotification('Failed to load machine details.', 'error');
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-          navigate('/login');
-        }
+        showNotification('Failed to load machine details.', 'error');
+        navigate('/admin');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchMachineDetails();
-  }, [machineId, navigate, addNotification]);
 
-  const handleFlagChange = (index, value) => {
+    fetchMachineDetails();
+  }, [machineId, navigate, showNotification]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setMachineDetails({ ...machineDetails, [name]: value });
+  };
+
+  const handleFlagChange = (index, e) => {
     const newFlags = [...flags];
-    newFlags[index].flag = value;
+    newFlags[index].flag = e.target.value;
     setFlags(newFlags);
   };
 
@@ -62,99 +74,258 @@ function EditMachine() {
 
   const handleRemoveFlag = (index) => {
     const newFlags = flags.filter((_, i) => i !== index);
-    setFlags(newFlags.length > 0 ? newFlags : [{ flag: '' }]);
+    setFlags(newFlags);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem('access_token');
+    const payload = {
+      name: machineDetails.name,
+      description: machineDetails.description,
+      provider,
+      operating_system: operatingSystem,
+      category: machineDetails.category,
+      difficulty,
+      flags: flags.map(f => ({ flag: f.flag })),
+      source_identifier: provider === 'docker' ? machineDetails.docker_image : machineDetails.vm_name,
+      config_json: provider === 'virtualbox' ? JSON.stringify({ snapshot_name: machineDetails.snapshot_name }) : null,
+    };
+
     try {
-      const token = localStorage.getItem('access_token');
-      const machineData = {
-        name,
-        description,
-        source_identifier: sourceIdentifier,
-        category,
-        difficulty,
-        flags: flags.filter(f => f.flag.trim() !== ''),
-      };
-      await api.put(`/admin/machines/${machineId}`, machineData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      await api.put(`/admin/machines/${machineId}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      addNotification('Machine updated successfully!', 'success');
+      showNotification('Machine updated successfully!', 'success');
       navigate('/admin');
     } catch (error) {
       console.error('Failed to update machine:', error);
-      let errorMessage = 'Failed to update machine!';
-      if (error.response && error.response.data && error.response.data.detail) {
-        if (Array.isArray(error.response.data.detail)) {
-          errorMessage = error.response.data.detail.map(err => `${err.loc.join('.')} - ${err.msg}`).join('; ');
-        } else if (typeof error.response.data.detail === 'string') {
-          errorMessage = error.response.data.detail;
-        }
-      }
-      addNotification(errorMessage, 'error');
-      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-        navigate('/login');
-      }
+      const errorMsg = error.response?.data?.detail || 'Failed to update machine';
+      showNotification(Array.isArray(errorMsg) ? errorMsg.map(e => e.msg).join(', ') : errorMsg, 'error');
     }
   };
 
+  const difficultyColors = {
+    Easy: 'bg-green-600',
+    Medium: 'bg-yellow-600',
+    Hard: 'bg-red-600',
+    Insane: 'bg-purple-600',
+  };
+
+  if (loading) {
+    return <AdminPageLayout title="Edit Machine"><div>Loading machine details...</div></AdminPageLayout>;
+  }
+
   return (
-    <div className="admin-container">
-      <h1>Edit Machine</h1>
-      <form onSubmit={handleSubmit} className="admin-form">
-        <div className="form-group">
-          <label>Name</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div className="form-group">
-          <label>Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
-        </div>
+    <AdminPageLayout title="Edit Machine">
+      <div className="mx-auto max-w-4xl">
+        <form onSubmit={handleSubmit} className="rounded-lg bg-gray-800/50 p-8 shadow-lg">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            {/* Left Column */}
+            <div className="flex flex-col gap-6">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">Provider</label>
+                <select
+                  value={provider}
+                  onChange={(e) => setProvider(e.target.value)}
+                  className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="docker">Docker</option>
+                  <option value="virtualbox">VirtualBox</option>
+                </select>
+              </div>
 
-        <div className="form-group">
-          <label>Docker Image</label>
-          <input type="text" value={sourceIdentifier} onChange={(e) => setSourceIdentifier(e.target.value)} required />
-        </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={provider}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {provider === 'docker' ? (
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-300">Docker Image</label>
+                      <input
+                        type="text"
+                        name="docker_image"
+                        value={machineDetails.docker_image}
+                        onChange={handleInputChange}
+                        className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+                        placeholder="e.g., vuln-app:latest"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-6">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-300">VM Name</label>
+                        <input
+                          type="text"
+                          name="vm_name"
+                          value={machineDetails.vm_name}
+                          onChange={handleInputChange}
+                          className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+                          placeholder="e.g., Ubuntu-Vuln-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-300">Snapshot Name</label>
+                        <input
+                          type="text"
+                          name="snapshot_name"
+                          value={machineDetails.snapshot_name}
+                          onChange={handleInputChange}
+                          className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+                          placeholder="e.g., clean_snapshot"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
 
-        <div className="form-group">
-          <label>Category</label>
-          <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} />
-        </div>
-        <div className="form-group">
-          <label>Difficulty</label>
-          <input type="text" value={difficulty} onChange={(e) => setDifficulty(e.target.value)} />
-        </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">Machine Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={machineDetails.name}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+                  required
+                />
+              </div>
 
-        <h2>Flags</h2>
-        {flags.map((flag, index) => (
-          <div key={index} className="form-group flag-input-group">
-            <input
-              type="text"
-              placeholder={`Flag ${index + 1}`}
-              value={flag.flag}
-              onChange={(e) => handleFlagChange(index, e.target.value)}
-            />
-            {flags.length > 1 && (
-              <button type="button" onClick={() => handleRemoveFlag(index)} className="btn btn-danger btn-sm">
-                Remove
-              </button>
-            )}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">Description</label>
+                <textarea
+                  name="description"
+                  rows="4"
+                  value={machineDetails.description}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+                ></textarea>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="flex flex-col gap-6">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">Operating System</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setOperatingSystem('Linux')}
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all ${operatingSystem === 'Linux' ? 'border-purple-500 bg-purple-500/20' : 'border-gray-600 bg-gray-700 hover:bg-gray-600'}`}
+                  >
+                    <FaLinux />
+                    Linux
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOperatingSystem('Windows')}
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all ${operatingSystem === 'Windows' ? 'border-blue-500 bg-blue-500/20' : 'border-gray-600 bg-gray-700 hover:bg-gray-600'}`}
+                  >
+                    <FaWindows />
+                    Windows
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">Difficulty</label>
+                <div className="flex gap-2">
+                  {['Easy', 'Medium', 'Hard', 'Insane'].map((d) => (
+                    <button
+                      type="button"
+                      key={d}
+                      onClick={() => setDifficulty(d)}
+                      className={`flex-1 rounded-md px-4 py-2 text-sm font-semibold text-white transition-all ${difficulty === d ? difficultyColors[d] : 'bg-gray-600 hover:bg-gray-500'}`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">Category</label>
+                <select
+                  name="category"
+                  value={machineDetails.category}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">Select Category</option>
+                  <option value="Web">Web</option>
+                  <option value="Pwn">Pwn</option>
+                  <option value="Forensics">Forensics</option>
+                  <option value="Crypto">Crypto</option>
+                  <option value="Reversing">Reversing</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-4 block text-sm font-medium text-gray-300">Flags</label>
+                <div className="flex flex-col gap-4">
+                  <AnimatePresence>
+                    {flags.map((flag, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex items-center gap-2"
+                      >
+                        <input
+                          type="text"
+                          value={flag.flag}
+                          onChange={(e) => handleFlagChange(index, e)}
+                          className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+                          placeholder={`Flag ${index + 1}`}
+                          required
+                        />
+                        {flags.length > 1 && (
+                          <button type="button" onClick={() => handleRemoveFlag(index)} className="text-red-500 hover:text-red-400">
+                            <FaTrash />
+                          </button>
+                        )}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  <button
+                    type="button"
+                    onClick={handleAddFlag}
+                    className="mt-2 self-start rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-500"
+                  >
+                    Add Flag
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        ))}
-        <button type="button" onClick={handleAddFlag} className="btn btn-secondary">
-          Add Flag
-        </button>
 
-        <div className="form-actions">
-          <button type="submit" className="btn btn-primary">Update Machine</button>
-          <button type="button" onClick={() => navigate('/admin')} className="btn btn-secondary">Cancel</button>
-        </div>
-      </form>
-    </div>
+          {/* Action Buttons */}
+          <div className="mt-10 flex justify-end gap-4">
+            <button
+              type="button"
+              onClick={() => navigate('/admin')}
+              className="rounded-md border border-gray-600 bg-transparent px-6 py-2 font-semibold text-white transition-colors hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="rounded-md bg-purple-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-purple-700"
+            >
+              Update Machine
+            </button>
+          </div>
+        </form>
+      </div>
+    </AdminPageLayout>
   );
-}
+};
 
 export default EditMachine;

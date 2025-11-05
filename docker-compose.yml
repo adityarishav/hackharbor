@@ -42,7 +42,7 @@ services:
 
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile.backend
     container_name: vulnverse-backend
     ports:

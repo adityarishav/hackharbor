@@ -22,7 +22,7 @@ const Sidebar = ({ handleLogout }) => {
         <div className="sidebar">
             <div className="sidebar-header">
                 <Link to="/">
-                    <h3>VulnVerse</h3>
+                    <h3>HackHarbor</h3>
                 </Link>
             </div>
             <ul className="sidebar-menu">

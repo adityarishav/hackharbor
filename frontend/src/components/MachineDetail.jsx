@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useNotification } from './Notification';
-import { jwtDecode } from 'jwt-decode'; // Import jwtDecode
+import { jwtDecode } from 'jwt-decode';
+import { FaPlay, FaStop, FaRedo, FaFlag, FaInfoCircle, FaHistory, FaPlus, FaLinux, FaWindows, FaArrowLeft } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function MachineDetail() {
   const { machineId } = useParams();
@@ -15,13 +17,13 @@ function MachineDetail() {
   const [isStopping, setIsStopping] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const [flagsStatus, setFlagsStatus] = useState([]);
-  const [flagInputs, setFlagInputs] = useState({}); // To manage individual flag input states
-  const [activeTab, setActiveTab] = useState('info'); // 'info' or 'changelog'
+  const [flagInputs, setFlagInputs] = useState({});
+  const [activeTab, setActiveTab] = useState('info');
   const [changelogEntries, setChangelogEntries] = useState([]);
   const [newChangelogEntry, setNewChangelogEntry] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false); // State to hold admin status
-  const [currentUserId, setCurrentUserId] = useState(null); // State to hold current user's ID
-  const [hasClickedStart, setHasClickedStart] = useState(false); // New state for revealing status
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [hasClickedStart, setHasClickedStart] = useState(false);
 
   const fetchMachineDetails = async () => {
     try {
@@ -62,7 +64,6 @@ function MachineDetail() {
         },
       });
       setFlagsStatus(response.data);
-      // Initialize flag inputs
       const initialFlagInputs = {};
       response.data.forEach(flag => {
         initialFlagInputs[flag.id] = '';
@@ -98,13 +99,12 @@ function MachineDetail() {
     fetchFlagsStatus();
     fetchChangelogEntries();
 
-    // Determine if user is admin
     const token = localStorage.getItem('access_token');
-    let userId = null; // Declare userId here
+    let userId = null;
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
-        userId = decodedToken.id; // Get user ID from token
+        userId = decodedToken.id;
         if (decodedToken.role === 'admin') {
           setIsAdmin(true);
         }
@@ -112,7 +112,7 @@ function MachineDetail() {
         console.error('Error decoding token:', error);
       }
     }
-    setCurrentUserId(userId); // Set currentUserId state
+    setCurrentUserId(userId);
   }, [machineId, navigate]);
 
   useEffect(() => {
@@ -121,7 +121,7 @@ function MachineDetail() {
     } else {
       setHasClickedStart(false);
     }
-  }, [machine, currentUserId]); // Run when machine or currentUserId changes
+  }, [machine, currentUserId]);
 
   const handleStartMachine = async () => {
     setIsStarting(true);
@@ -133,9 +133,8 @@ function MachineDetail() {
         },
       });
       showNotification('Machine started!', 'success');
-      fetchMachineDetails(); // Re-fetch machine details to update IP address
-      setHasClickedStart(true); // Set this to true after successful start
-      setHasClickedStart(true); // Set this to true after successful start
+      fetchMachineDetails();
+      setHasClickedStart(true);
     } catch (err) {
       console.error('Failed to start machine:', err);
       showNotification(err.response?.data?.detail || 'Failed to start machine!', 'error');
@@ -153,9 +152,9 @@ function MachineDetail() {
           Authorization: `Bearer ${token}`,
         },
       });
-      showNotification('Machine stopped and removed!', 'success');
-      fetchMachineDetails(); // Re-fetch machine details to clear IP address
-      setHasClickedStart(false); // Hide the IP after stopping
+      showNotification('Machine stopped!', 'success');
+      fetchMachineDetails();
+      setHasClickedStart(false);
     } catch (err) {
       console.error('Failed to stop machine:', err);
       showNotification(err.response?.data?.detail || 'Failed to stop machine!', 'error');
@@ -174,7 +173,7 @@ function MachineDetail() {
         },
       });
       showNotification('Machine restarted!', 'success');
-      fetchMachineDetails(); // Re-fetch machine details to update IP address
+      fetchMachineDetails();
     } catch (err) {
       console.error('Failed to restart machine:', err);
       showNotification(err.response?.data?.detail || 'Failed to restart machine!', 'error');
@@ -202,8 +201,8 @@ function MachineDetail() {
         },
       });
       showNotification('Flag submitted successfully!', 'success');
-      fetchFlagsStatus(); // Re-fetch flag status to update UI
-      setFlagInputs({ ...flagInputs, [flagId]: '' }); // Clear input after submission
+      fetchFlagsStatus();
+      setFlagInputs({ ...flagInputs, [flagId]: '' });
     } catch (err) {
       console.error('Flag submission failed:', err);
       showNotification(err.response?.data?.detail || 'Flag submission failed!', 'error');
@@ -224,7 +223,7 @@ function MachineDetail() {
       });
       showNotification('Changelog entry added successfully!', 'success');
       setNewChangelogEntry('');
-      fetchChangelogEntries(); // Re-fetch changelog entries to update the list
+      fetchChangelogEntries();
     } catch (err) {
       console.error('Failed to add changelog entry:', err);
       showNotification(err.response?.data?.detail || 'Failed to add changelog entry!', 'error');
@@ -232,176 +231,201 @@ function MachineDetail() {
   };
 
   if (loading) {
-    return <div>Loading machine details...</div>;
+    return <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">Loading machine details...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="flex min-h-screen items-center justify-center bg-gray-900 text-red-500">Error: {error}</div>;
   }
 
   if (!machine) {
-    return <div>Machine not found.</div>;
+    return <div className="flex min-h-screen items-center justify-center bg-gray-900 text-gray-400">Machine not found.</div>;
   }
 
-  const buttonStyle = {
-    padding: '10px 20px',
-    margin: '5px',
-    borderRadius: '5px',
-    border: 'none',
-    color: 'white',
-    cursor: 'pointer',
-    fontSize: '16px',
+  const difficultyColors = {
+    Easy: 'bg-green-500',
+    Medium: 'bg-yellow-500',
+    Hard: 'bg-red-500',
+    Insane: 'bg-purple-500',
   };
 
-  const startButtonStyle = { ...buttonStyle, backgroundColor: '#4CAF50' }; // Green
-  const stopButtonStyle = { ...buttonStyle, backgroundColor: '#F44336' };  // Red
-  const restartButtonStyle = { ...buttonStyle, backgroundColor: '#FF9800' }; // Orange
-  const submitFlagButtonStyle = { ...buttonStyle, backgroundColor: '#2196F3' }; // Blue
-
   return (
-    <div style={{ padding: '20px' }}>
-      <button onClick={() => navigate('/dashboard')} style={{ marginBottom: '20px', padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-        Back to Dashboard
+    <div className="min-h-screen bg-gray-900 text-white p-6">
+      <button
+        onClick={() => navigate('/machines')}
+        className="mb-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-semibold transition-colors flex items-center"
+      >
+        <FaArrowLeft className="mr-2" /> Back to Machines
       </button>
-      <h2>{machine.name}</h2>
 
-      <div style={{ marginBottom: '20px', borderBottom: '1px solid #ccc' }}>
-        <button
-          onClick={() => setActiveTab('info')}
-          style={{
-            padding: '10px 15px',
-            border: 'none',
-            borderBottom: activeTab === 'info' ? '2px solid #007bff' : 'none',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-            fontSize: '16px',
-            marginRight: '10px',
-            color: activeTab === 'info' ? '#007bff' : '#333',
-            fontWeight: activeTab === 'info' ? 'bold' : 'normal',
-          }}
-        >
-          Machine Info
-        </button>
-        <button
-          onClick={() => setActiveTab('changelog')}
-          style={{
-            padding: '10px 15px',
-            border: 'none',
-            borderBottom: activeTab === 'changelog' ? '2px solid #007bff' : 'none',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-            fontSize: '16px',
-            color: activeTab === 'changelog' ? '#007bff' : '#333',
-            fontWeight: activeTab === 'changelog' ? 'bold' : 'normal',
-          }}
-        >
-          Changelog
-        </button>
-      </div>
-
-      {activeTab === 'info' && (
-        <div>
-          <p><strong>Description:</strong> {machine.description}</p>
-          <p><strong>Provider:</strong> {machine.provider}</p>
-          <p><strong>Source Identifier:</strong> {machine.source_identifier}</p>
-          {machine.category && <p><strong>Category:</strong> {machine.category}</p>}
-          {machine.difficulty && <p><strong>Difficulty:</strong> {machine.difficulty}</p>}
+      <div className="bg-gray-800 rounded-lg shadow-xl p-8 mb-8">
+        <h2 className="text-4xl font-bold mb-4 text-purple-400">{machine.name}</h2>
+        <div className="flex items-center space-x-4 mb-6">
+          <span
+            className={`px-4 py-1 rounded-full text-sm font-semibold ${
+              difficultyColors[machine.difficulty] || 'bg-gray-600'
+            }`}
+          >
+            {machine.difficulty}
+          </span>
+          <span className="text-gray-400 text-sm flex items-center">
+            {machine.operating_system === 'Linux' && <FaLinux className="mr-2" />}
+            {machine.operating_system === 'Windows' && <FaWindows className="mr-2" />}
+            {machine.operating_system || 'N/A'}
+          </span>
           {machine.ip_address && hasClickedStart ? (
-            <p style={{ color: 'green' }}><strong>Status:</strong> Running (IP: {machine.ip_address})</p>
+            <span className="text-green-500 font-semibold flex items-center">
+              <FaPlay className="mr-2" /> Running (IP: {machine.ip_address})
+            </span>
           ) : (
-            <p style={{ color: 'red' }}><strong>Status:</strong> Stopped</p>
+            <span className="text-red-500 font-semibold flex items-center">
+              <FaStop className="mr-2" /> Stopped
+            </span>
           )}
-          <div style={{ marginBottom: '20px' }}>
-            <button
-              onClick={handleStartMachine}
-              disabled={isStarting || isStopping || isRestarting || hasClickedStart}
-              style={startButtonStyle}
-            >
-              {isStarting ? 'Starting...' : `Start ${machine.provider === 'docker' ? 'Docker Container' : 'VirtualBox VM'}`}
-            </button>
-            <button
-              onClick={handleStopMachine}
-              disabled={isStarting || isStopping || isRestarting || !hasClickedStart}
-              style={stopButtonStyle}
-            >
-              {isStopping ? 'Stopping...' : 'Stop Machine'}
-            </button>
-            <button
-              onClick={handleRestartMachine}
-              disabled={isStarting || isStopping || isRestarting}
-              style={restartButtonStyle}
-            >
-              {isRestarting ? 'Restarting...' : 'Restart Machine'}
-            </button>
-          </div>
+        </div>
+        <p className="text-gray-300 mb-6 leading-relaxed">{machine.description}</p>
 
-          <h3>Flags:</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {flagsStatus.length === 0 ? (
-              <p>No flags defined for this machine.</p>
-            ) : (
-              flagsStatus.map((flag) => (
-                <div key={flag.id} style={{ border: '1px solid #eee', padding: '10px', borderRadius: '5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <p style={{ margin: '0' }}>Flag:</p>
-                  {flag.is_submitted ? (
-                    <span style={{ color: 'green', fontWeight: 'bold' }}>Submitted!</span>
+        <div className="flex space-x-4 mb-8">
+          <button
+            onClick={handleStartMachine}
+            disabled={isStarting || isStopping || isRestarting || hasClickedStart}
+            className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-md text-white font-semibold transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isStarting ? 'Starting...' : <><FaPlay className="mr-2" /> Start {machine.provider === 'docker' ? 'Container' : 'VM'}</>}
+          </button>
+          <button
+            onClick={handleStopMachine}
+            disabled={isStarting || isStopping || isRestarting || !hasClickedStart}
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-md text-white font-semibold transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isStopping ? 'Stopping...' : <><FaStop className="mr-2" /> Stop Machine</>}
+          </button>
+          <button
+            onClick={handleRestartMachine}
+            disabled={isStarting || isStopping || isRestarting}
+            className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 rounded-md text-white font-semibold transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isRestarting ? 'Restarting...' : <><FaRedo className="mr-2" /> Restart Machine</>}
+          </button>
+        </div>
+
+        <div className="flex border-b border-gray-700 mb-6">
+          <button
+            onClick={() => setActiveTab('info')}
+            className={`py-3 px-6 text-lg font-semibold focus:outline-none ${
+              activeTab === 'info' ? 'border-b-2 border-purple-500 text-purple-400' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <FaInfoCircle className="inline-block mr-2" /> Machine Info
+          </button>
+          <button
+            onClick={() => setActiveTab('changelog')}
+            className={`py-3 px-6 text-lg font-semibold focus:outline-none ${
+              activeTab === 'changelog' ? 'border-b-2 border-purple-500 text-purple-400' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <FaHistory className="inline-block mr-2" /> Changelog
+          </button>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {activeTab === 'info' && (
+            <motion.div
+              key="infoTab"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            >
+              <div>
+                <h3 className="text-2xl font-bold mb-4 text-white">Details</h3>
+                <p className="text-gray-300 mb-2"><strong className="text-purple-300">Provider:</strong> {machine.provider}</p>
+                <p className="text-gray-300 mb-2"><strong className="text-purple-300">Source Identifier:</strong> {machine.source_identifier}</p>
+                {machine.category && <p className="text-gray-300 mb-2"><strong className="text-purple-300">Category:</strong> {machine.category}</p>}
+                {machine.solves !== undefined && <p className="text-gray-300 mb-2"><strong className="text-purple-300">Solves:</strong> {machine.solves}</p>}
+              </div>
+
+              <div>
+                <h3 className="text-2xl font-bold mb-4 text-white">Flags</h3>
+                <div className="flex flex-col gap-4">
+                  {flagsStatus.length === 0 ? (
+                    <p className="text-gray-400">No flags defined for this machine.</p>
                   ) : (
-                    <>
-                      <input
-                        type="text"
-                        placeholder="Enter flag"
-                        value={flagInputs[flag.id] || ''}
-                        onChange={(e) => handleFlagInputChange(flag.id, e)}
-                        style={{ flexGrow: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                      />
-                      <button
-                        onClick={() => handleSubmitFlag(flag.id)}
-                        disabled={!flagInputs[flag.id] || isStarting || isStopping || isRestarting}
-                        style={submitFlagButtonStyle}
-                      >
-                        Submit Flag
-                      </button>
-                    </>
+                    flagsStatus.map((flag) => (
+                      <div key={flag.id} className="bg-gray-700 p-4 rounded-md flex items-center justify-between">
+                        <p className="text-gray-300 font-medium">Flag:</p>
+                        {flag.is_submitted ? (
+                          <span className="text-green-400 font-bold flex items-center"><FaFlag className="mr-2" /> Submitted!</span>
+                        ) : (
+                          <div className="flex items-center gap-2 w-full ml-4">
+                            <input
+                              type="text"
+                              placeholder="Enter flag"
+                              value={flagInputs[flag.id] || ''}
+                              onChange={(e) => handleFlagInputChange(flag.id, e)}
+                              className="flex-grow p-2 rounded-md bg-gray-800 border border-gray-600 text-white focus:ring-purple-500 focus:border-purple-500"
+                            />
+                            <button
+                              onClick={() => handleSubmitFlag(flag.id)}
+                              disabled={!flagInputs[flag.id] || isStarting || isStopping || isRestarting}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Submit
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))
                   )}
                 </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+              </div>
+            </motion.div>
+          )}
 
-      {activeTab === 'changelog' && (
-        <div>
-          <h3>Changelog Entries:</h3>
-          {isAdmin && (
-            <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
-              <h4>Add New Changelog Entry</h4>
-              <textarea
-                value={newChangelogEntry}
-                onChange={(e) => setNewChangelogEntry(e.target.value)}
-                placeholder="Enter changelog description"
-                rows="4"
-                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', marginBottom: '10px', resize: 'vertical' }}
-              ></textarea>
-              <button onClick={handleAddChangelogEntry} style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-                Add Entry
-              </button>
-            </div>
-          )}
-          {changelogEntries.length === 0 ? (
-            <p>No changelog entries for this machine.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {changelogEntries.map((entry) => (
-                <div key={entry.id} style={{ padding: '10px', border: '1px solid #eee', borderRadius: '5px', backgroundColor: '#fff' }}>
-                  <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>{new Date(entry.timestamp).toLocaleString()}</p>
-                  <p style={{ margin: '0' }}>{entry.description}</p>
+          {activeTab === 'changelog' && (
+            <motion.div
+              key="changelogTab"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <h3 className="text-2xl font-bold mb-4 text-white">Changelog Entries</h3>
+              {isAdmin && (
+                <div className="bg-gray-700 p-6 rounded-lg mb-6">
+                  <h4 className="text-xl font-bold mb-3 text-white">Add New Changelog Entry</h4>
+                  <textarea
+                    value={newChangelogEntry}
+                    onChange={(e) => setNewChangelogEntry(e.target.value)}
+                    placeholder="Enter changelog description"
+                    rows="4"
+                    className="w-full p-3 rounded-md bg-gray-800 border border-gray-600 text-white focus:ring-purple-500 focus:border-purple-500 mb-4 resize-y"
+                  ></textarea>
+                  <button
+                    onClick={handleAddChangelogEntry}
+                    className="px-5 py-2 bg-purple-600 hover:bg-purple-700 rounded-md text-white font-semibold transition-colors flex items-center"
+                  >
+                    <FaPlus className="mr-2" /> Add Entry
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+              {changelogEntries.length === 0 ? (
+                <p className="text-gray-400">No changelog entries for this machine.</p>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {changelogEntries.map((entry) => (
+                    <div key={entry.id} className="bg-gray-700 p-4 rounded-md shadow-sm">
+                      <p className="text-gray-200 font-semibold mb-1">{new Date(entry.timestamp).toLocaleString()}</p>
+                      <p className="text-gray-300">{entry.description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
           )}
-        </div>
-      )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

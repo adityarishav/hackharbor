@@ -3,13 +3,13 @@ import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useNotification } from './Notification';
 import { FaSearch } from 'react-icons/fa'; // Add this import
+import MachineCard from './MachineCard'; // Import MachineCard
 
 import './Dashboard.css';
 
 function Dashboard() {
   const [machines, setMachines] = useState([]);
   const [userScore, setUserScore] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const addNotification = useNotification();
 
@@ -54,31 +54,9 @@ function Dashboard() {
     }
   };
 
-  const fetchUserRole = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-      const response = await api.get('/users/me/', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.data.role === 'admin') {
-        setIsAdmin(true);
-      }
-    } catch (error) {
-      console.error('Failed to verify admin status:', error);
-      addNotification('Failed to verify admin status.', 'error');
-    }
-  };
-
   useEffect(() => {
     fetchMachines();
     fetchUserScore();
-    fetchUserRole();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -131,28 +109,9 @@ function Dashboard() {
       {machines.length === 0 ? (
         <p>No machines available at the moment. Check back later!</p>
       ) : (
-        <div className="machine-grid">
+        <div className="machine-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {machines.map((machine) => (
-            <div
-              key={machine.id}
-              className="machine-card"
-              onClick={() => navigate(`/machines/${machine.id}`)}
-            >
-              <div className="machine-card-header">
-                <h3>{machine.name}</h3>
-              </div>
-              <div className="machine-card-body">
-                <p><strong>Category:</strong> {machine.category || 'N/A'}</p>
-                <p><strong>Difficulty:</strong> {machine.difficulty || 'N/A'}</p>
-                <p><strong>Status: </strong>
-                  {machine.ip_address ? (
-                    <span className="status-running">Running</span>
-                  ) : (
-                    <span className="status-stopped">Stopped</span>
-                  )}
-                </p>
-              </div>
-            </div>
+            <MachineCard key={machine.id} machine={machine} />
           ))}
         </div>
       )}
