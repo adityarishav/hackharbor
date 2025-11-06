@@ -9,7 +9,7 @@ import models, database, schemas # Import schemas
 from pydantic import BaseModel
 
 # Secret key to sign the JWT token
-SECRET_KEY = "a_very_secret_key"  # Replace with a real secret key in production
+SECRET_KEY = "Thi$i$SwcureKey"  # Replace with a real secret key in production
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 

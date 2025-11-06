@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  sqli_box:
+    build: . 
+    container_name: ctf_sqli_easy
+    environment:
+      SQL_FLAG: "HH{SQL_1s_EZ_w1th_OR_1=1}" 
+    ports:
+      - "8080:80"
+    restart: always

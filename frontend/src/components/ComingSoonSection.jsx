@@ -1,29 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import TeaserCard from './TeaserCard';
 import { motion } from 'framer-motion';
+import api from '../services/api';
 
 const ComingSoonSection = () => {
-  // Mock data for upcoming machines
-  const upcomingMachines = [
-    { id: 1, name: 'CrypTonic', releaseDate: 'Oct 15, 2025' },
-    { id: 2, name: 'FireWall', releaseDate: 'Nov 1, 2025' },
-  ];
+  const [upcomingMachines, setUpcomingMachines] = useState([]);
 
-  // Mock data for upcoming events
-  const upcomingEvents = [
-    {
-      id: 1,
-      name: 'Weekend CTF Challenge',
-      date: 'Oct 25-26, 2025',
-      description: 'A 48-hour capture-the-flag event with exclusive prizes.',
-    },
-    {
-      id: 2,
-      name: 'Workshop: Intro to Reverse Engineering',
-      date: 'Nov 8, 2025',
-      description: 'A live workshop covering the basics of reverse engineering.',
-    },
-  ];
+  useEffect(() => {
+    const fetchUpcomingMachines = async () => {
+      try {
+        const response = await api.get('/machines/upcoming');
+        setUpcomingMachines(response.data);
+      } catch (error) {
+        console.error('Failed to fetch upcoming machines:', error);
+      }
+    };
+
+    fetchUpcomingMachines();
+  }, []);
 
   return (
     <motion.div
@@ -47,15 +41,11 @@ const ComingSoonSection = () => {
         <div>
           <h3 className="mb-6 border-b-2 border-gray-800 pb-2 text-2xl font-semibold text-gray-300">Events</h3>
           <div className="flex flex-col gap-6">
-            {upcomingEvents.map((event) => (
-              <div key={event.id} className="rounded-lg bg-gray-800 p-6">
-                <div className="mb-2 flex items-baseline justify-between">
-                  <h4 className="text-lg font-bold text-gray-200">{event.name}</h4>
-                  <p className="text-sm text-gray-400">{event.date}</p>
-                </div>
-                <p className="text-base text-gray-300">{event.description}</p>
+            <div className="rounded-lg bg-gray-800 p-6">
+              <div className="mb-2 flex items-baseline justify-between">
+                <h4 className="text-lg font-bold text-gray-200">No upcoming events</h4>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>

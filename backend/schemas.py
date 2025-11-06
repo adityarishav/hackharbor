@@ -54,6 +54,8 @@ class MachineBase(BaseModel):
     operating_system: str | None = None
     config_json: str | None = None
     solves: int = 0
+    release_date: datetime | None = None
+    status: str | None = "upcoming"
 
 class MachineCreate(MachineBase):
     pass

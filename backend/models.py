@@ -49,6 +49,8 @@ class Machine(Base):
     operating_system = Column(String, nullable=True) # e.g., "Linux", "Windows"
     config_json = Column(String, nullable=True) # For provider-specific config like VirtualBox snapshot name
     solves = Column(Integer, default=0) # Number of times this machine has been solved
+    release_date = Column(DateTime(timezone=True), nullable=True) # New field for upcoming machines
+    status = Column(String, default="upcoming") # New field for machine status
 
     flags = relationship("Flag", back_populates="machine", cascade="all, delete-orphan")
     submissions = relationship("Submission", back_populates="machine")

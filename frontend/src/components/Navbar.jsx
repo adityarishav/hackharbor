@@ -4,7 +4,6 @@ import { AuthContext } from '../contexts/AuthContext';
 import { useNotification } from './Notification';
 import UserProfileDropdown from './UserProfileDropdown'; // Your dropdown component
 import api from '../services/api.js';
-import Logo from '../assets/react.svg';
 
 const Navbar = () => {
   const { user } = useContext(AuthContext);
@@ -46,7 +45,6 @@ const Navbar = () => {
         {/* Left Section: Logo */}
         <div className="flex items-center">
           <Link to="/dashboard">
-            {/* <img src={Logo} alt="HackHarbor Logo" className="h-8 w-auto" /> */}
             <h3 className="text-4xl font-bold mb-4 text-purple-400">HackHarbor</h3>
           </Link>
         </div>

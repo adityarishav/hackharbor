@@ -5,8 +5,6 @@ import { useNotification } from './Notification';
 import { FaSearch } from 'react-icons/fa'; // Add this import
 import MachineCard from './MachineCard'; // Import MachineCard
 
-import './Dashboard.css';
-
 function Dashboard() {
   const [machines, setMachines] = useState([]);
   const [userScore, setUserScore] = useState(0);
@@ -90,26 +88,25 @@ function Dashboard() {
   };
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
-        <div style={{ display: 'flex', alignItems: 'center' }}> {/* New flex container */}
-          <h1 style={{marginRight: '10px'}}>Machines</h1>
-          {/* Search Box */}
-          <div className="search-box">
-              <input type="text" placeholder="Search machines..." />
-              <FaSearch className="search-icon" />
+    <div className="p-8">
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center">
+          <h1 className="text-3xl font-bold mr-4">Machines</h1>
+          <div className="flex items-center bg-gray-700 rounded-md px-3">
+            <input type="text" placeholder="Search machines..." className="bg-transparent text-white outline-none flex-grow p-2" />
+            <FaSearch className="text-gray-400 ml-2" />
           </div>
         </div>
-        <div className="dashboard-actions">
-          <div className="user-score">Your Score: <span>{userScore}</span></div>
-          <button onClick={handleDownloadVpnConfig} className="btn btn-primary">Download VPN</button>
+        <div className="flex items-center gap-4">
+          <div className="text-xl font-bold text-white">Your Score: <span className="text-purple-400">{userScore}</span></div>
+          <button onClick={handleDownloadVpnConfig} className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700">Download VPN</button>
         </div>
       </div>
 
       {machines.length === 0 ? (
         <p>No machines available at the moment. Check back later!</p>
       ) : (
-        <div className="machine-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {machines.map((machine) => (
             <MachineCard key={machine.id} machine={machine} />
           ))}

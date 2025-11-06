@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  linux_pwn_box:
+    build: . 
+    container_name: ctf_linux
+    ports:
+      - "2222:22"
+    restart: always

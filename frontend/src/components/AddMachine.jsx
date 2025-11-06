@@ -20,6 +20,8 @@ const AddMachine = () => {
     vm_name: '',
     snapshot_name: '',
     category: '',
+    release_date: '',
+    status: 'upcoming',
   });
 
   const handleInputChange = (e) => {
@@ -55,6 +57,8 @@ const AddMachine = () => {
       flags: flags.map(f => ({ flag: f.flag })),
       source_identifier: provider === 'docker' ? machineDetails.docker_image : machineDetails.vm_name,
       config_json: provider === 'virtualbox' ? JSON.stringify({ snapshot_name: machineDetails.snapshot_name }) : null,
+      release_date: machineDetails.release_date || null,
+      status: machineDetails.status,
     };
 
     try {
@@ -223,6 +227,31 @@ const AddMachine = () => {
                   <option value="Forensics">Forensics</option>
                   <option value="Crypto">Crypto</option>
                   <option value="Reversing">Reversing</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">Release Date (Optional)</label>
+                <input
+                  type="date"
+                  name="release_date"
+                  value={machineDetails.release_date}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">Status</label>
+                <select
+                  name="status"
+                  value={machineDetails.status}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="upcoming">Upcoming</option>
+                  <option value="active">Active</option>
+                  <option value="retired">Retired</option>
                 </select>
               </div>
 

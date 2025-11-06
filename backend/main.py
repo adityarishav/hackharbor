@@ -78,6 +78,11 @@ def read_machines(skip: int = 0, limit: int = 100, search: str | None = None, sh
     machines = query.offset(skip).limit(limit).all()
     return machines
 
+@app.get("/machines/upcoming", response_model=list[schemas.Machine])
+def read_upcoming_machines(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
+    machines = db.query(models.Machine).filter(models.Machine.status == "upcoming").offset(skip).limit(limit).all()
+    return machines
+
 @app.get("/machines/{machine_id}", response_model=schemas.Machine)
 def read_machine(machine_id: int, db: Session = Depends(database.get_db)):
     db_machine = db.query(models.Machine).filter(models.Machine.id == machine_id).first()
@@ -475,20 +480,20 @@ def get_admin_analytics(db: Session = Depends(database.get_db), current_user: mo
 
     # User registration trends (e.g., users registered per day)
     user_registration_trends = [
-        {"date": str(item.date), "count": item.count}
+        {"date": item.created_at.isoformat(), "count": item.count}
         for item in db.query(
-            func.date(models.User.created_at).label('date'),
+            models.User.created_at,
             func.count(models.User.id).label('count')
-        ).group_by(func.date(models.User.created_at)).order_by(func.date(models.User.created_at)).all()
+        ).group_by(models.User.created_at).order_by(models.User.created_at).all()
     ]
 
     # Submission trends (e.g., submissions per day)
     submission_trends = [
-        {"date": str(item.date), "count": item.count}
+        {"date": item.created_at.isoformat(), "count": item.count}
         for item in db.query(
-            func.date(models.Submission.created_at).label('date'),
+            models.Submission.created_at,
             func.count(models.Submission.id).label('count')
-        ).group_by(func.date(models.Submission.created_at)).order_by(func.date(models.Submission.created_at)).all()
+        ).group_by(models.Submission.created_at).order_by(models.Submission.created_at).all()
     ]
 
     # Machine popularity (most started machines - requires a new field or logging starts)

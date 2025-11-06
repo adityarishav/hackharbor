@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  lfi_box:
+    build: . 
+    container_name: ctf_lfi_hard
+    environment:
+      LFI_FLAG: "HH{PHP_Fi1ter_Byp4ss_FTW}"
+    ports:
+      - "8081:80"
+    restart: always

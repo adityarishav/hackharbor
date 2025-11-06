@@ -1,16 +1,13 @@
-# Dockerfile
 FROM ubuntu:22.04
 
-# 1. Install necessary packages and create low-privilege user
 RUN apt-get update && \
     apt-get install -y openssh-server sudo cron && \
     useradd -m -s /bin/bash lowpriv && \
     echo 'lowpriv:password123' | chpasswd && \
     mkdir /var/run/sshd
 
-# 2. Add the flag and the vulnerable file
 COPY README.txt /home/lowpriv/
-RUN echo "This is the root flag: FLAG{Pr1vil3g3_Esc4l4ted_W1th_Wr1t4ble_Cr0n}" > /root/root_flag.txt
+RUN echo "This is the root flag: HH{Pr1vil3g3_Esc4l4ted_W1th_Wr1t4ble_Cr0n}" > /root/root_flag.txt
 
 # 3. Create the vulnerable binary location (cleanup.sh)
 RUN echo '#!/bin/bash' > /usr/local/bin/cleanup.sh
