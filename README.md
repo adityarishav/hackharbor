@@ -7,14 +7,16 @@ HackHarbor is a comprehensive full-stack web platform for cybersecurity training
 
   The platform is powered by a React frontend and a FastAPI backend, which handles user authentication, machine orchestration, and a real-time flag submission and scoring system. For streamlined deployment, the entire application is containerized using Docker Compose.
 
-
-# Requirements
-- [Docker](https://docs.docker.com/desktop/setup/install/linux/)
-
-
 # Installation
 
+### Requirements
+- [Docker](https://docs.docker.com/desktop/setup/install/linux/)
+
 - To create this project inside docker you have to use this command
+```shell
+docker network create hackharbor_network
+```
+
 ```shell
 docker-compose up --build -d
 ```

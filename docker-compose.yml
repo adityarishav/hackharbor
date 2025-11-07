@@ -2,6 +2,7 @@ version: '3.8'
 
 networks:
   hackharbor_network:
+    external: true
 
 services:
   postgres:
@@ -9,7 +10,7 @@ services:
     container_name: hackharbor-postgres
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: hackharbordb10
+      POSTGRES_PASSWORD: hackharbor
       POSTGRES_DB: hackharbor_db
     ports:
       - "5432:5432"
@@ -38,11 +39,6 @@ services:
       - EASYRSA_BATCH=true
     command: sh -c 'if [ ! -f /etc/openvpn/ovpn_env.sh ]; then ovpn_genconfig -u udp://127.0.0.1 && ovpn_initpki nopass && easyrsa build-client-full client nopass && ovpn_getclient client > /etc/openvpn/client.ovpn; fi && ovpn_run'
     restart: unless-stopped
-    # For linux 
-    # environment:
-    #   - EASYRSA_BATCH=true
-    #     command: sh -c 'if [ ! -f /etc/openvpn/ovpn_env.sh ]; then ovpn_genconfig -u udp://127.0.0.1 && ovpn_initpki && easyrsa build-client-full client nopass && ovpn_getclient client > /etc/openvpn/client.ovpn; fi && ovpn_run'
-    # restart: unless-stopped
 
   backend:
     build:
@@ -52,7 +48,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://admin:hackharbordb10@postgres:5432/hackharbor_db
+      DATABASE_URL: postgresql://admin:hackharbor@postgres:5432/hackharbor_db
       SECRET_KEY: Thi$i$SwcureKey  # Replace with a strong, unique secret key
       DOCKER_NETWORK_NAME: hackharbor_network
     depends_on:
