@@ -44,6 +44,13 @@ const DashboardCharts = () => {
           });
           const difficultyData = difficultyResponse.data;
 
+          const difficultyColors = {
+            Easy:   { bg: '#10B981', border: '#059669' }, 
+            Medium: { bg: '#F59E0B', border: '#D97706' }, 
+            Hard:   { bg: '#5134e2ff', border: '#5134e2ff' }, 
+            Insane: { bg: '#e60808ff', border: '#e60808ff' } 
+          };
+
           if (difficultyData && difficultyData.length > 0) {
             setMachineDistributionData({
               labels: difficultyData.map(item => item.difficulty),
@@ -51,8 +58,15 @@ const DashboardCharts = () => {
                 {
                   label: 'Machine Distribution',
                   data: difficultyData.map(item => item.count),
-                  backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6'], // Example colors
-                  borderColor: ['#059669', '#D97706', '#DC2626', '#7C3AED'],
+                  
+                  // 2. Map through the data and lookup the color by difficulty name
+                  backgroundColor: difficultyData.map(item => 
+                    difficultyColors[item.difficulty]?.bg || '#CCCCCC' // Fallback color
+                  ),
+                  borderColor: difficultyData.map(item => 
+                    difficultyColors[item.difficulty]?.border || '#999999' // Fallback border
+                  ),
+                  
                   borderWidth: 1,
                 },
               ],
