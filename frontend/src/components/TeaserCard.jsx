@@ -14,7 +14,15 @@ const TeaserCard = ({ machine }) => {
         <h3 className="text-xl font-semibold text-gray-400">{machine.name}</h3>
       </div>
       <div>
-        <p className="text-base text-gray-500">Releases: {machine.releaseDate}</p>
+        <p className="text-base text-gray-500">
+          Releases: {machine.release_date
+            ? new Date(machine.release_date).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "2-digit",
+              })
+            : "Unknown"}
+        </p>
       </div>
     </motion.div>
   );

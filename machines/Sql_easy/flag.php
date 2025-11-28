@@ -16,7 +16,7 @@ $flag = getenv('SQL_FLAG');
         <p style="font-size: 1.2em;">Congratulations, you successfully bypassed the authentication!</p>
         <p style="font-size: 1.5em; margin-top: 20px;">Your flag is:</p>
         <div style="background-color: #333; color: yellow; padding: 15px; border-radius: 4px; font-family: monospace;">
-            <strong><?php echo htmlspecialchars($flag); ?></strong>
+            <strong>HH{SQL_1s_EZ_w1th_OR_1=1}</strong>
         </div>
         <p style="margin-top: 30px;"><a href="index.php" style="color: #007bff; text-decoration: none;">Go Back to Login</a></p>
     </div>

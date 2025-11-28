@@ -44,6 +44,7 @@ const AddChallengePage = () => {
         if (dockerImage) {
             formData.append('docker_image', dockerImage);
         }
+        formData.append('status', 'upcoming'); // Default status for new challenges
 
         try {
             const token = localStorage.getItem('access_token'); // Get the token

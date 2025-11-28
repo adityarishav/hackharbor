@@ -3,14 +3,14 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
 
-# Association table for the many-to-many relationship between users and active machines
+# many-to-many
 active_machines_association = Table(
     'active_machines', Base.metadata,
     Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
     Column('machine_id', Integer, ForeignKey('machines.id'), primary_key=True)
 )
 
-# Association table for the many-to-many relationship between users and active challenges
+# many-to-many 
 active_challenges_association = Table(
     'active_challenges', Base.metadata,
     Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
@@ -38,19 +38,19 @@ class Machine(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     description = Column(String)
-    source_identifier = Column(String, nullable=True) # Docker image name or VirtualBox VM name/UUID
+    source_identifier = Column(String, nullable=True) 
     ip_address = Column(String, nullable=True)
     category = Column(String, nullable=True)
     difficulty = Column(String, nullable=True)
-    is_deleted = Column(Boolean, default=False) # New field
+    is_deleted = Column(Boolean, default=False) 
 
     # New fields
-    provider = Column(String, default="docker") # e.g., "docker", "virtualbox"
-    operating_system = Column(String, nullable=True) # e.g., "Linux", "Windows"
-    config_json = Column(String, nullable=True) # For provider-specific config like VirtualBox snapshot name
-    solves = Column(Integer, default=0) # Number of times this machine has been solved
-    release_date = Column(DateTime(timezone=True), nullable=True) # New field for upcoming machines
-    status = Column(String, default="upcoming") # New field for machine status
+    provider = Column(String, default="docker") 
+    operating_system = Column(String, nullable=True) 
+    config_json = Column(String, nullable=True) 
+    solves = Column(Integer, default=0) 
+    release_date = Column(DateTime(timezone=True), nullable=True) 
+    status = Column(String, default="upcoming")
 
     flags = relationship("Flag", back_populates="machine", cascade="all, delete-orphan")
     submissions = relationship("Submission", back_populates="machine")
@@ -63,7 +63,7 @@ class Flag(Base):
     id = Column(Integer, primary_key=True, index=True)
     machine_id = Column(Integer, ForeignKey("machines.id"))
     flag = Column(String)
-    is_deleted = Column(Boolean, default=False) # New field
+    is_deleted = Column(Boolean, default=False) 
 
     machine = relationship("Machine", back_populates="flags")
 
@@ -73,7 +73,7 @@ class Submission(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     machine_id = Column(Integer, ForeignKey("machines.id"))
-    flag_id = Column(Integer, ForeignKey("flags.id")) # New flag_id column
+    flag_id = Column(Integer, ForeignKey("flags.id")) 
     flag = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -85,7 +85,7 @@ class Changelog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     machine_id = Column(Integer, ForeignKey("machines.id"))
-    admin_id = Column(Integer, ForeignKey("users.id")) # Admin who made the change
+    admin_id = Column(Integer, ForeignKey("users.id")) 
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
     description = Column(String)
 
@@ -119,7 +119,7 @@ class ChallengeFlag(Base):
     id = Column(Integer, primary_key=True, index=True)
     challenge_id = Column(Integer, ForeignKey("challenges.id"))
     flag = Column(String)
-    is_deleted = Column(Boolean, default=False) # Soft delete for flags
+    is_deleted = Column(Boolean, default=False)
 
     challenge = relationship("Challenge", back_populates="flags")
 
@@ -129,14 +129,14 @@ class ChallengeSubmission(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     challenge_id = Column(Integer, ForeignKey("challenges.id"))
-    challenge_flag_id = Column(Integer, ForeignKey("challenge_flags.id"), nullable=True) # New field
+    challenge_flag_id = Column(Integer, ForeignKey("challenge_flags.id"), nullable=True) 
     submitted_flag = Column(String)
     is_correct = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User")
     challenge = relationship("Challenge", back_populates="submissions")
-    challenge_flag = relationship("ChallengeFlag") # New relationship
+    challenge_flag = relationship("ChallengeFlag")
 
 class Announcement(Base):
     __tablename__ = "announcements"

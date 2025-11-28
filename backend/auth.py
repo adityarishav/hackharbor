@@ -2,10 +2,10 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status, APIRouter # Import APIRouter
+from fastapi import Depends, HTTPException, status, APIRouter 
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-import models, database, schemas # Import schemas
+import models, database, schemas 
 from pydantic import BaseModel
 
 # Secret key to sign the JWT token

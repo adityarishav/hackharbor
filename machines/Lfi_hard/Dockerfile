@@ -13,7 +13,7 @@ RUN mkdir -p /etc/challenge/
 
 ARG LFI_FLAG
 RUN echo "This is the final flag file." > /etc/challenge/secret_config.ini
-RUN echo "The flag is: ${LFI_FLAG}" >> /etc/challenge/secret_config.ini
+RUN echo "The flag is: HH{PHP_Fi1ter_Byp4ss_FTW}" >> /etc/challenge/secret_config.ini
 
 RUN chown -R www-data:www-data /var/www/html
 

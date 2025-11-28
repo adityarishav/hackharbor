@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  windows_smb_box:
+    build: .
+    container_name: ctf_windows_smb
+    # Expose the standard SMB port
+    ports:
+      - "445:445"
+    environment:
+      # The flag is written to a file during build
+      SMB_FLAG: "HH{Smb_An0nym0us_Acc3ss_Is_B4d}"
+    restart: always

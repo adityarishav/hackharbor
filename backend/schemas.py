@@ -45,17 +45,17 @@ class Flag(FlagBase):
 class MachineBase(BaseModel):
     name: str
     description: str | None = None
-    source_identifier: str | None = None # Docker image name or VirtualBox VM name/UUID
+    source_identifier: str | None = None 
     category: str | None = None
     difficulty: str | None = None
     flags: list[FlagCreate] = []
-    # New fields
+  
     provider: str = "docker"
     operating_system: str | None = None
     config_json: str | None = None
     solves: int = 0
     release_date: datetime | None = None
-    status: str | None = "upcoming"
+    status: str = "upcoming"
 
 class MachineCreate(MachineBase):
     pass
@@ -70,19 +70,19 @@ class Machine(MachineBase):
         from_attributes = True
 
 class SubmissionBase(BaseModel):
-    # flag: str  # Removed as it will be derived from flag_id
+    
     pass
 
 class SubmissionCreate(SubmissionBase):
-    flag: str # Still need flag for submission input
+    flag: str 
     machine_id: int
 
 class Submission(SubmissionBase):
     id: int
     user_id: int
     machine_id: int
-    flag_id: int # New field
-    flag: str # Keep flag for response
+    flag_id: int 
+    flag: str 
     created_at: datetime
 
     class Config:
@@ -124,8 +124,8 @@ class ChallengeBase(BaseModel):
     difficulty: str
     points: int
     file_path: str | None = None
-    docker_image: str | None = None # New field
-    flags: list[ChallengeFlagCreate] = [] # New field for multiple flags
+    docker_image: str | None = None 
+    flags: list[ChallengeFlagCreate] = [] 
 
 class ChallengeCreate(ChallengeBase):
     pass
@@ -133,10 +133,9 @@ class ChallengeCreate(ChallengeBase):
 class Challenge(ChallengeBase):
     id: int
     created_at: datetime
-    ip_address: str | None = None # New field
+    ip_address: str | None = None 
     is_deleted: bool
-    flags: list[ChallengeFlag] = [] # New field for multiple flags
-
+    flags: list[ChallengeFlag] = [] 
     class Config:
         from_attributes = True
 

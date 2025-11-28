@@ -4,13 +4,13 @@ import models, database, auth, schemas, docker
 from sqlalchemy.sql import func
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
-import json # Import json
+import json 
 import subprocess
 import os
 
 app = FastAPI()
 
-app.include_router(auth.auth_router) # Include the auth router
+app.include_router(auth.auth_router) 
 
 origins = [
     "http://localhost:5173", 
@@ -66,12 +66,15 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 @app.get("/machines/", response_model=list[schemas.Machine])
 def read_machines(skip: int = 0, limit: int = 100, search: str | None = None, show_deleted: bool = False, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
     query = db.query(models.Machine)
-    if current_user.role == "admin" and show_deleted:
-        # Admin requesting to see all machines, including deleted ones
-        pass # No additional filter for is_deleted
+    if current_user.role == "admin":
+        if not show_deleted:
+            query = query.filter(models.Machine.is_deleted == False)
     else:
-        # Normal user, or admin not explicitly requesting deleted machines
-        query = query.filter(models.Machine.is_deleted == False)
+        # For non-admins, filter out upcoming and deleted machines
+        query = query.filter(
+            models.Machine.is_deleted == False,
+            models.Machine.status != "upcoming"
+        )
 
     if search:
         query = query.filter(models.Machine.name.ilike(f"%{search}%"))
@@ -109,7 +112,9 @@ def create_admin_machine(machine: schemas.MachineCreate, db: Session = Depends(d
         provider=machine.provider,
         operating_system=machine.operating_system,
         config_json=machine.config_json,
-        solves=machine.solves
+        solves=machine.solves,
+        status=machine.status,
+        release_date=machine.release_date
     )
     db.add(db_machine)
     db.commit()
@@ -140,7 +145,7 @@ def start_machine(machine_id: int, db: Session = Depends(database.get_db), curre
 
     ip_address = db_machine.ip_address
     
-    # --- Start the machine if it's not already running ---
+    # --- Start machine 
     if ip_address is None:
         try:
             client = docker.from_env()
@@ -153,9 +158,9 @@ def start_machine(machine_id: int, db: Session = Depends(database.get_db), curre
                 container.stop()
                 container.remove()
             except docker.errors.NotFound:
-                pass # No existing container, proceed
+                pass 
 
-            # Automatically detect ports from the Docker image
+            #  detect ports 
             try:
                 image = client.images.get(db_machine.source_identifier)
                 exposed_ports = image.attrs['Config'].get('ExposedPorts', {})
@@ -176,16 +181,16 @@ def start_machine(machine_id: int, db: Session = Depends(database.get_db), curre
             # Update the database with the new IP address
             db_machine.ip_address = ip_address
             db.add(db_machine)
-            # We commit here to make the IP available immediately
+            # ip avalable
             db.commit()
 
         except Exception as e:
-            # Rollback IP change if starting fails
+           
             db_machine.ip_address = None
             db.commit()
             raise HTTPException(status_code=500, detail=f"An unexpected error occurred while starting the machine: {e}")
 
-    # --- Add the current user to the list of active users for this machine ---
+    # Adding the current user to the list of active users
     if current_user not in db_machine.active_users:
         db_machine.active_users.append(current_user)
         db.commit()
@@ -199,16 +204,15 @@ def stop_machine(machine_id: int, db: Session = Depends(database.get_db), curren
     if not db_machine:
         raise HTTPException(status_code=404, detail="Machine not found")
 
-    # --- Remove the current user from the list of active users ---
+    #Removeing the current user 
     if current_user in db_machine.active_users:
         db_machine.active_users.remove(current_user)
         db.commit()
         db.refresh(db_machine)
     else:
-        # If user wasn't active, just return a success message.
         return {"message": "Machine is no longer active for you."}
 
-    # --- If no users are left, stop the machine globally ---
+    #global
     if not db_machine.active_users:
         try:
             client = docker.from_env()
@@ -218,7 +222,7 @@ def stop_machine(machine_id: int, db: Session = Depends(database.get_db), curren
                 container.stop()
                 container.remove()
             except docker.errors.NotFound:
-                pass # Already stopped
+                pass 
 
             # Clear the IP address from the database
             db_machine.ip_address = None
@@ -239,8 +243,8 @@ def restart_machine(machine_id: int, db: Session = Depends(database.get_db), cur
         raise HTTPException(status_code=404, detail="Machine not found")
 
     try:
-        # --- Step 1: Hard stop the machine ---
-        if db_machine.ip_address is not None: # Only stop if it's actually running
+      
+        if db_machine.ip_address is not None: 
             client = docker.from_env()
             container_name = f"vuln-app-{db_machine.id}"
             try:
@@ -248,19 +252,18 @@ def restart_machine(machine_id: int, db: Session = Depends(database.get_db), cur
                 container.stop()
                 container.remove()
             except docker.errors.NotFound:
-                pass # Already stopped
+                pass 
 
-        # --- Step 2: Clear state in DB ---
         db_machine.active_users.clear()
         db_machine.ip_address = None
         db.commit()
 
-        # --- Step 3: Start the machine again ---
+       
         ip_address = None
         client = docker.from_env()
         network = get_or_create_docker_network()
         container_name = f"vuln-app-{db_machine.id}"
-        # Automatically detect ports from the Docker image
+        
         try:
             image = client.images.get(db_machine.source_identifier)
             exposed_ports = image.attrs['Config'].get('ExposedPorts', {})
@@ -278,7 +281,7 @@ def restart_machine(machine_id: int, db: Session = Depends(database.get_db), cur
         container.reload()
         ip_address = container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
 
-        # --- Step 4: Update DB with new IP ---
+        
         db_machine.ip_address = ip_address
         db.commit()
 
@@ -287,7 +290,7 @@ def restart_machine(machine_id: int, db: Session = Depends(database.get_db), cur
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred during restart: {e}")
 
-@app.delete("/admin/machines/{machine_id}", status_code=200) # Change status code to 200 for success message
+@app.delete("/admin/machines/{machine_id}", status_code=200) 
 def delete_machine(machine_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_admin_user)):
     db_machine = db.query(models.Machine).filter(models.Machine.id == machine_id).first()
     if not db_machine:
@@ -300,15 +303,13 @@ def delete_machine(machine_id: int, db: Session = Depends(database.get_db), curr
         container.stop()
         container.remove()
     except docker.errors.NotFound:
-        pass # Container not found, already removed or never started
+        pass
 
-    # Soft delete the machine
+    
     db_machine.is_deleted = True
     db.add(db_machine)
     db.commit()
     db.refresh(db_machine)
-
-    return {"message": "Machine soft-deleted successfully"}
 
     return {"message": "Machine deleted successfully"}
 
@@ -318,7 +319,7 @@ def update_machine(machine_id: int, machine: schemas.MachineCreate, db: Session 
     if not db_machine:
         raise HTTPException(status_code=404, detail="Machine not found")
 
-    # Update machine details
+    
     db_machine.name = machine.name
     db_machine.description = machine.description
     db_machine.source_identifier = machine.source_identifier
@@ -328,25 +329,26 @@ def update_machine(machine_id: int, machine: schemas.MachineCreate, db: Session 
     db_machine.operating_system = machine.operating_system
     db_machine.config_json = machine.config_json
     db_machine.solves = machine.solves
+    db_machine.status = machine.status
+    db_machine.release_date = machine.release_date
     db.add(db_machine)
     db.commit()
     db.refresh(db_machine)
 
-    # Handle flags: soft-delete, update, and add new ones
+    #flags
     existing_flags = db.query(models.Flag).filter(models.Flag.machine_id == machine_id).all()
     existing_flag_values = {f.flag: f for f in existing_flags}
     new_flag_values = {f.flag for f in machine.flags}
 
-    # Soft-delete flags that are no longer present in the new list
+    #dlete old flag if any flag removed
     for flag_obj in existing_flags:
         if flag_obj.flag not in new_flag_values:
             flag_obj.is_deleted = True
             db.add(flag_obj)
 
-    # Add new flags or reactivate existing ones
+    # Add new flags 
     for flag_data in machine.flags:
         if flag_data.flag in existing_flag_values:
-            # Flag exists, ensure it's not deleted
             existing_flag_values[flag_data.flag].is_deleted = False
             db.add(existing_flag_values[flag_data.flag])
         else:
@@ -392,7 +394,7 @@ def get_changelog_entries(machine_id: int, db: Session = Depends(database.get_db
 @app.post("/vpn/generate-config")
 async def generate_vpn_config(current_user: models.User = Depends(auth.get_current_user)):
     username = current_user.username
-    easyrsa_path = "/usr/local/bin/easyrsa" # Correct path found
+    easyrsa_path = "/usr/local/bin/easyrsa" 
 
     # Generate the client certificate if it doesn't exist
     try:
@@ -401,12 +403,9 @@ async def generate_vpn_config(current_user: models.User = Depends(auth.get_curre
             check=True, capture_output=True, text=True, timeout=30
         )
     except subprocess.CalledProcessError as e:
-        # If the certificate already exists, easyrsa may return a non-zero exit code with a specific message.
         if "Request file already exists." in e.stderr or ("An client certificate with the name" in e.stderr and "already exists" in e.stderr):
-            # This is not an error, the certificate/request is already there. We can proceed.
             pass
         else:
-            # This is a real error.
             print(f"Error creating VPN certificate: {e.stderr}")
             raise HTTPException(status_code=500, detail=f"Error creating VPN certificate: {e.stderr}")
 
@@ -439,11 +438,10 @@ def create_submission(submission: schemas.SubmissionCreate, db: Session = Depend
     if not is_correct_flag:
         raise HTTPException(status_code=400, detail="Incorrect flag")
 
-    # Check for duplicate submission of this specific flag by this user for this machine
     db_submission = db.query(models.Submission).filter(
         models.Submission.user_id == current_user.id,
         models.Submission.machine_id == submission.machine_id,
-        models.Submission.flag_id == is_correct_flag.id # Check for specific flag_id
+        models.Submission.flag_id == is_correct_flag.id # Check 
     ).first()
     if db_submission:
         raise HTTPException(status_code=400, detail="Flag already submitted")
@@ -487,7 +485,7 @@ def get_admin_analytics(db: Session = Depends(database.get_db), current_user: mo
         ).group_by(models.User.created_at).order_by(models.User.created_at).all()
     ]
 
-    # Submission trends (e.g., submissions per day)
+    # Submission trends 
     submission_trends = [
         {"date": item.created_at.isoformat(), "count": item.count}
         for item in db.query(
@@ -600,8 +598,6 @@ def get_admin_stats(db: Session = Depends(database.get_db), current_user: models
     total_users = db.query(models.User).count()
     active_machines = db.query(models.Machine).filter(models.Machine.ip_address != None).count()
     total_submissions = db.query(models.Submission).count() + db.query(models.ChallengeSubmission).count()
-    # Active sessions is harder to track without a dedicated session management system.
-    # For now, we can return a placeholder or implement a simple count of users with active machines.
     active_sessions = db.query(models.User).join(models.active_machines_association).distinct().count()
 
     return {

@@ -86,6 +86,7 @@ const EditChallenge = () => {
       flags: flags.map(f => ({ flag: f.value })), // Send as a list of objects
       docker_image: challengeDetails.docker_image,
       file_path: challengeDetails.file_path, // Assuming file_path is handled separately if needed
+      status: challengeDetails.status || 'upcoming', // Add status to payload
     };
 
     try {

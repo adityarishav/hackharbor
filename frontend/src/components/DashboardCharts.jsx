@@ -44,6 +44,19 @@ const DashboardCharts = () => {
           });
           const difficultyData = difficultyResponse.data;
 
+          // if (difficultyData && difficultyData.length > 0) {
+          //   setMachineDistributionData({
+          //     labels: difficultyData.map(item => item.difficulty),
+          //     datasets: [
+          //       {
+          //         label: 'Machine Distribution',
+          //         data: difficultyData.map(item => item.count),
+          //         backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6'], 
+          //         borderColor: ['#059669', '#D97706', '#DC2626', '#7C3AED'],
+          //         borderWidth: 1,
+          //       },
+          //     ],
+          //   });
           const difficultyColors = {
             Easy:   { bg: '#10B981', border: '#059669' }, 
             Medium: { bg: '#F59E0B', border: '#D97706' }, 

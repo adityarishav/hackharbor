@@ -2,9 +2,13 @@
 
 $file = $_GET['page'] ?? 'contact.html';
 
-$file = str_replace(['../', '..\\', '..'], '', $file); 
+$file = str_replace(array('../', '..\\'), '', $file);
 
-$file_path = "pages/" . $file;
+
+$file = urldecode($file);
+
+$base_dir = __DIR__ . "/pages/";
+$target_file = $base_dir . $file; 
 
 ?>
 
@@ -30,18 +34,15 @@ $file_path = "pages/" . $file;
     </div>
 
     <div class="content-box">
-        
         <?php
-        // ==============================================================
-        if (file_exists($file_path)) {
-            echo htmlspecialchars(file_get_contents($file_path));
+
+        if (file_exists($target_file)) {
+            echo htmlspecialchars(file_get_contents($target_file));
         } else {
-            echo "Error: File not found or path denied by the security filter.";
+            echo "Error: File not found.";
+            echo "\n[DEBUG: Tried to access: " . htmlspecialchars($target_file) . "]";
         }
         ?>
-
     </div>
-    
-    <p style="margin-top: 30px; font-size: small; color: #a0aec0;">Hint: The security team implemented a strong filter against '..'. Can you trick PHP's inclusion process to read the secret config file in /etc/challenge/?</p>
 </body>
 </html>
