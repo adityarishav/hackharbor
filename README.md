@@ -29,7 +29,8 @@ docker exec hackharbor-backend alembic upgrade head
   By default there is no admin user so when you create a account you have to make it as a admin user so that you can get the admin feature to add machines and other to do that you have to run these command 
 ```
 docker exec -it hackharbor-postgres psql -U admin -d hackharbor_db
-
+```
+```
 UPDATE users SET role='admin' where username=<your username>
 ```
 
