@@ -34,7 +34,7 @@ docker exec -it hackharbor-postgres psql -U admin -d hackharbor_db
 UPDATE users SET role='admin' where username=<your username>
 ```
 
-- To install the image of machines in the docker use this run this from the each machine folder
+- To install the image of machines in the docker use this run this from the each machine folder.
 ```shell
 docker build -t <image-name>:<version> .
 ```
