@@ -16,6 +16,7 @@ HackHarbor is a comprehensive full-stack web platform for cybersecurity training
 ```shell
 docker network create hackharbor_network
 ```
+- Change the ip in docker-compose.yml file to your pubic ip so that the vpn can work in line number 40
 
 ```shell
 docker-compose up --build -d
