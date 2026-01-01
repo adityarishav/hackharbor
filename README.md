@@ -18,7 +18,7 @@ docker network create hackharbor_network
 ```
 - Change the ip in docker-compose.yml file to your pubic ip so that the vpn can work in line number 40
 
-- You also have to put your email and SMTP creds in the email_utils.py file in the backend
+- You also have to put your email and SMTP creds in the email_utils.py file in the backend folder so that email and 2FA can work
 
 ```shell
 docker-compose up --build -d
