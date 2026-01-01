@@ -18,9 +18,8 @@ const MachineCard = ({ machine, isAdmin = false }) => {
 
   return (
     <div
-      className={`relative rounded-lg bg-gray-800 shadow-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 ${
-        machine.is_deleted && isAdmin ? 'opacity-50 grayscale' : ''
-      }`}
+      className={`relative glass-card rounded-xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 group ${machine.is_deleted && isAdmin ? 'opacity-50 grayscale' : ''
+        }`}
       onClick={handleCardClick}
     >
       {machine.is_deleted && isAdmin && (
@@ -30,32 +29,29 @@ const MachineCard = ({ machine, isAdmin = false }) => {
       )}
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-white">{machine.name}</h3>
+          <h3 className="text-xl font-bold text-white group-hover:text-purple-300 transition-colors">{machine.name}</h3>
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              difficultyColors[machine.difficulty] || 'bg-gray-600'
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold shadow-lg ${difficultyColors[machine.difficulty] || 'bg-gray-600'
+              }`}
           >
             {machine.difficulty}
           </span>
         </div>
-        <p className="text-gray-400 text-sm mb-4 line-clamp-2">{machine.description}</p>
-        <div className="flex items-center justify-between text-gray-400 text-sm">
+        <p className="text-gray-400 text-sm mb-4 line-clamp-2 group-hover:text-gray-300 transition-colors">{machine.description}</p>
+        <div className="flex items-center justify-between text-gray-400 text-sm border-t border-white/5 pt-4">
           <div className="flex items-center">
-            {machine.operating_system === 'Linux' && <FaLinux className="mr-1" />}
-            {machine.operating_system === 'Windows' && <FaWindows className="mr-1" />}
+            {machine.operating_system === 'Linux' && <FaLinux className="mr-2 text-lg" />}
+            {machine.operating_system === 'Windows' && <FaWindows className="mr-2 text-lg" />}
             <span>{machine.operating_system || 'N/A'}</span>
           </div>
           <div className="flex items-center">
-            <FaSkull className="mr-1" />
+            <FaSkull className="mr-2 text-red-400" />
             <span>{machine.solves || 0} Solves</span>
           </div>
         </div>
       </div>
       {isAdmin && (
         <div className="absolute top-2 right-2 flex space-x-2">
-          {/* Admin actions can go here, e.g., edit/delete buttons */}
-          {/* For now, just a placeholder or can be passed as props */}
         </div>
       )}
     </div>

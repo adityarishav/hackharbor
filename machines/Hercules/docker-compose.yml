@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  # 1. The Domain Controller (Samba 4)
+  dc:
+    image: nowsci/samba-domain
+    container_name: hercules-dc
+    environment:
+      - "DOMAIN=hercules.htb"
+      - "DOMAINPASS=Prettyprincess123!"
+      - "INSECURE=true"
+    networks:
+      internal:
+        ipv4_address: 172.16.0.5
+    # We mount a setup script to create users automatically
+    volumes:
+      - ./ad-setup:/check
+
+  # 2. The Vulnerable Web App
+  web:
+    build: ./web
+    container_name: hercules-web
+    ports:
+      - "80:5000"
+    environment:
+      - LDAP_SERVER=172.16.0.5
+      - LDAP_DOMAIN=hercules.htb
+    networks:
+      internal:
+        ipv4_address: 172.16.0.10
+    depends_on:
+      - dc
+
+  # 3. The AD Setup Helper
+  # Run once to populate the Domain with your users
+  ad-setup:
+    image: python:3.9-slim
+    container_name: hercules-setup
+    volumes:
+      - ./ad-setup:/app
+    working_dir: /app
+    command: bash setup.sh
+    networks:
+      internal:
+        ipv4_address: 172.16.0.100
+    depends_on:
+      - dc
+
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/24

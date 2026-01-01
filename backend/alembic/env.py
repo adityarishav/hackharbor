@@ -45,6 +45,8 @@ def run_migrations_offline() -> None:
     """
     load_dotenv()
     url = os.getenv("DATABASE_URL")
+    if os.name == 'nt' and url and "@postgres" in url:
+        url = url.replace("@postgres", "@localhost")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -64,7 +66,12 @@ def run_migrations_online() -> None:
 
     """
     load_dotenv()
-    connectable = create_engine(os.getenv("DATABASE_URL"))
+    url = os.getenv("DATABASE_URL")
+    # Only replace postgres with localhost if running on Windows (Host)
+    # Inside Docker (Linux), we want to keep 'postgres'
+    if os.name == 'nt' and url and "@postgres" in url:
+        url = url.replace("@postgres", "@localhost")
+    connectable = create_engine(url)
 
     with connectable.connect() as connection:
         context.configure(

@@ -11,18 +11,39 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  const fetchUserProfile = async (tokenToUse) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/me/`, {
+        headers: {
+          'Authorization': `Bearer ${tokenToUse}`
+        }
+      });
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setIsAuthenticated(true);
+      } else {
+        throw new Error('Failed to fetch user profile');
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      
+    }
+  };
+
   useEffect(() => {
     const tokenFromStorage = localStorage.getItem('access_token');
 
     if (tokenFromStorage) {
       try {
         const decodedUser = jwtDecode(tokenFromStorage);
-        setUser({ 
+        setUser({
           username: decodedUser.sub,
           role: decodedUser.role,
           id: decodedUser.id
         });
         setIsAuthenticated(true);
+        fetchUserProfile(tokenFromStorage);
       } catch (error) {
         localStorage.removeItem('access_token');
         setUser(null);
@@ -36,12 +57,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('access_token', newToken);
     setToken(newToken);
     const decodedUser = jwtDecode(newToken);
-    setUser({ 
+    setUser({
       username: decodedUser.sub,
       role: decodedUser.role,
       id: decodedUser.id
     });
     setIsAuthenticated(true);
+    fetchUserProfile(newToken);
     navigate('/post-login');
   };
 
@@ -60,6 +82,7 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     login,
     logout,
+    refreshUser: () => fetchUserProfile(token),
   };
 
   return (

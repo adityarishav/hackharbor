@@ -10,7 +10,6 @@ active_machines_association = Table(
     Column('machine_id', Integer, ForeignKey('machines.id'), primary_key=True)
 )
 
-# many-to-many 
 active_challenges_association = Table(
     'active_challenges', Base.metadata,
     Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
@@ -24,7 +23,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     password = Column(String)
-    role = Column(String, default="user") # New role column
+    role = Column(String, default="user") 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     submissions = relationship("Submission", back_populates="user")
@@ -43,8 +42,6 @@ class Machine(Base):
     category = Column(String, nullable=True)
     difficulty = Column(String, nullable=True)
     is_deleted = Column(Boolean, default=False) 
-
-    # New fields
     provider = Column(String, default="docker") 
     operating_system = Column(String, nullable=True) 
     config_json = Column(String, nullable=True) 
@@ -108,6 +105,7 @@ class Challenge(Base):
     docker_image = Column(String, nullable=True)
     ip_address = Column(String, nullable=True)
     is_deleted = Column(Boolean, default=False)
+    release_date = Column(DateTime(timezone=True), nullable=True)
 
     submissions = relationship("ChallengeSubmission", back_populates="challenge")
     flags = relationship("ChallengeFlag", back_populates="challenge", cascade="all, delete-orphan")
@@ -119,6 +117,7 @@ class ChallengeFlag(Base):
     id = Column(Integer, primary_key=True, index=True)
     challenge_id = Column(Integer, ForeignKey("challenges.id"))
     flag = Column(String)
+    points = Column(Integer, default=0) # Add points column
     is_deleted = Column(Boolean, default=False)
 
     challenge = relationship("Challenge", back_populates="flags")
@@ -146,4 +145,73 @@ class Announcement(Base):
     description = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+class Event(Base):
+    __tablename__ = "events"
 
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String)
+    start_date = Column(DateTime(timezone=True))
+    end_date = Column(DateTime(timezone=True))
+    location = Column(String) # e.g., "Online", "Room 101"
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Badge(Base):
+    __tablename__ = "badges"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    description = Column(String)
+    icon = Column(String) # FontAwesome icon name, e.g., "FaTrophy"
+    condition_type = Column(String, nullable=True) # e.g., "total_solves", "category_score"
+    condition_value = Column(Integer, nullable=True) # e.g., 10, 100
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user_badges = relationship("UserBadge", back_populates="badge")
+
+class UserBadge(Base):
+    __tablename__ = "user_badges"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    badge_id = Column(Integer, ForeignKey("badges.id"))
+    awarded_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User")
+    badge = relationship("Badge", back_populates="user_badges")
+
+
+class Module(Base):
+    __tablename__ = "modules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(String)
+    order = Column(Integer, default=0)
+    cover_image = Column(String, nullable=True) # URL to image
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    lessons = relationship("Lesson", back_populates="module", cascade="all, delete-orphan")
+
+class Lesson(Base):
+    __tablename__ = "lessons"
+
+    id = Column(Integer, primary_key=True, index=True)
+    module_id = Column(Integer, ForeignKey("modules.id"))
+    title = Column(String, index=True)
+    content = Column(String) # Markdown content
+    order = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    module = relationship("Module", back_populates="lessons")
+
+class OTPCode(Base):
+    __tablename__ = "otp_codes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, index=True)
+    otp = Column(String)
+    type = Column(String)  # 'register' or 'reset'
+    payload = Column(String, nullable=True)  # JSON string for registration data
+    expires_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -49,12 +49,13 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://admin:hackharbor@postgres:5432/hackharbor_db
-      SECRET_KEY: Thi$i$SwcureKey  # Replace with a strong, unique secret key
+      SECRET_KEY: Thi$i$SwcureKey  
       DOCKER_NETWORK_NAME: hackharbor_network
     depends_on:
       - postgres
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Mount the Docker socket
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./uploads:/app/uploads
     networks:
       - hackharbor_network
     restart: unless-stopped

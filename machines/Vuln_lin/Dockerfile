@@ -9,7 +9,7 @@ RUN apt-get update && \
 COPY README.txt /home/lowpriv/
 RUN echo "This is the root flag: HH{Pr1vil3g3_Esc4l4ted_W1th_Wr1t4ble_Cr0n}" > /root/root_flag.txt
 
-# 3. Create the vulnerable binary location (cleanup.sh)
+# vulnerable binary location (cleanup.sh)
 RUN echo '#!/bin/bash' > /usr/local/bin/cleanup.sh
 RUN echo 'echo "Running cleanup..."' >> /usr/local/bin/cleanup.sh
 

@@ -17,17 +17,34 @@ class UserCreate(UserBase):
             raise HTTPException(status_code=422, detail='Password cannot be longer than 72 bytes')
         return v
 
+class MachineSummary(BaseModel):
+    id: int
+    name: str
+    class Config:
+        from_attributes = True
+
+class ChallengeSummary(BaseModel):
+    id: int
+    title: str
+    class Config:
+        from_attributes = True
+
 class User(UserBase):
     id: int
     created_at: datetime
     role: str
-    email: str
+    email: str | None = None
+    active_machines: list[MachineSummary] = []
+    active_challenges: list[ChallengeSummary] = []
 
     class Config:
         from_attributes = True
 
 class UserUpdate(BaseModel):
-    role: str
+    email: str | None = None
+    password: str | None = None
+    current_password: str | None = None
+    role: str | None = None
 
 class FlagBase(BaseModel):
     flag: str
@@ -59,6 +76,24 @@ class MachineBase(BaseModel):
 
 class MachineCreate(MachineBase):
     pass
+
+class RegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+    role: str = "user"
+
+class RegisterVerify(BaseModel):
+    email: str
+    otp: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    otp: str
+    new_password: str
 
 class Machine(MachineBase):
     id: int
@@ -105,6 +140,7 @@ class Changelog(ChangelogBase):
 
 class ChallengeFlagBase(BaseModel):
     flag: str
+    points: int = 0 # Add points field
 
 class ChallengeFlagCreate(ChallengeFlagBase):
     pass
@@ -113,6 +149,7 @@ class ChallengeFlag(ChallengeFlagBase):
     id: int
     challenge_id: int
     is_deleted: bool
+    points: int # Add points field
 
     class Config:
         from_attributes = True
@@ -126,6 +163,7 @@ class ChallengeBase(BaseModel):
     file_path: str | None = None
     docker_image: str | None = None 
     flags: list[ChallengeFlagCreate] = [] 
+    release_date: datetime | None = None
 
 class ChallengeCreate(ChallengeBase):
     pass
@@ -174,3 +212,58 @@ class Announcement(AnnouncementBase):
     class Config:
         from_attributes = True
 
+class EventBase(BaseModel):
+    title: str
+    description: str
+    start_date: datetime
+    end_date: datetime
+    location: str
+
+class EventCreate(EventBase):
+    pass
+
+class Event(EventBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class LessonBase(BaseModel):
+    title: str
+    content: str
+    order: int = 0
+
+class LessonCreate(LessonBase):
+    pass
+
+class Lesson(LessonBase):
+    id: int
+    module_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class ModuleBase(BaseModel):
+    title: str
+    description: str
+    order: int = 0
+    cover_image: str | None = None
+
+class ModuleCreate(ModuleBase):
+    pass
+
+class Module(ModuleBase):
+    id: int
+    created_at: datetime
+    lessons: list[Lesson] = []
+
+    class Config:
+        from_attributes = True
+
+class ChallengeSubmissionResponse(BaseModel):
+    is_correct: bool
+    message: str
+    points_awarded: int

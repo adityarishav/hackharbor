@@ -8,15 +8,15 @@ from sqlalchemy.orm import Session
 import models, database, schemas 
 from pydantic import BaseModel
 
-# Secret key to sign the JWT token
-SECRET_KEY = "Thi$i$SwcureKey"  # Replace with a real secret key in production
+
+SECRET_KEY = "Thi$i$SwcureKey"  
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-auth_router = APIRouter() # Define APIRouter
+auth_router = APIRouter()
 
 class Token(BaseModel):
     access_token: str
@@ -52,7 +52,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        user = db.query(models.User).filter(models.User.username == username).first()
+        from sqlalchemy.orm import selectinload
+        user = db.query(models.User).options(
+            selectinload(models.User.active_machines),
+            selectinload(models.User.active_challenges)
+        ).filter(models.User.username == username).first()
+        
         if user is None:
             raise credentials_exception
         # Attach the role from the database user to the payload for consistent access
@@ -69,7 +74,7 @@ async def get_current_admin_user(current_user: models.User = Depends(get_current
 
 @auth_router.post("/token", response_model=Token) # Use auth_router.post
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
-    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    user = db.query(models.User).filter((models.User.username == form_data.username) | (models.User.email == form_data.username)).first()
     if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

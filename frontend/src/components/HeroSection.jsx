@@ -14,35 +14,35 @@ const HeroSection = ({ username, score, completedMachines, totalMachines }) => {
   const progress = (completedMachines / totalMachines) * 100;
 
   return (
-    <motion.div 
-      className="bg-gray-800 p-8 rounded-lg shadow-lg mb-8"
+    <motion.div
+      className="glass-panel p-8 rounded-2xl mb-8"
       initial={{ opacity: 0, y: -50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h1 className="text-4xl font-bold mb-4">Welcome , <span className="text-primary">{username}</span>!</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-        <motion.div className="bg-gray-700 p-4 rounded-lg" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-          <p className="text-lg text-gray-400">Your Score</p>
-          <p className="text-3xl font-bold text-primary">{score}</p>
+      <h1 className="text-4xl font-bold mb-6">Welcome back, <span className="neon-text">{username}</span>!</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+        <motion.div className="glass-card p-6 rounded-xl" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+          <p className="text-lg text-gray-400 mb-2">Your Score</p>
+          <p className="text-4xl font-bold text-purple-400">{score}</p>
         </motion.div>
-        <motion.div className="bg-gray-700 p-4 rounded-lg" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-          <p className="text-lg text-gray-400">Your Rank</p>
-          <p className="text-3xl font-bold text-primary">{rank.name}</p>
+        <motion.div className="glass-card p-6 rounded-xl" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
+          <p className="text-lg text-gray-400 mb-2">Your Rank</p>
+          <p className="text-4xl font-bold text-purple-400">{rank.name}</p>
         </motion.div>
-        <motion.div className="bg-gray-700 p-4 rounded-lg" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}>
-          <p className="text-lg text-gray-400">Machines Owned</p>
-          <p className="text-3xl font-bold text-primary">{completedMachines} / {totalMachines}</p>
+        <motion.div className="glass-card p-6 rounded-xl" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}>
+          <p className="text-lg text-gray-400 mb-2">Machines Owned</p>
+          <p className="text-4xl font-bold text-purple-400">{completedMachines} / {totalMachines}</p>
         </motion.div>
       </div>
       <div className="mt-8">
-        <div className="flex justify-between mb-1">
-          <span className="text-base font-medium text-primary">Progress to next rank</span>
-          <span className="text-sm font-medium text-primary">{rank.progress.toFixed(0)}%</span>
+        <div className="flex justify-between mb-2">
+          <span className="text-base font-medium text-gray-300">Progress to next rank</span>
+          <span className="text-sm font-medium text-purple-400">{rank.progress.toFixed(0)}%</span>
         </div>
-        <div className="w-full bg-gray-700 rounded-full h-2.5">
-          <motion.div 
-            className="bg-primary h-2.5 rounded-full"
+        <div className="w-full bg-gray-900/50 rounded-full h-3 border border-white/5">
+          <motion.div
+            className="bg-gradient-to-r from-purple-600 to-blue-600 h-3 rounded-full shadow-[0_0_10px_rgba(147,51,234,0.5)]"
             initial={{ width: 0 }}
             animate={{ width: `${rank.progress}%` }}
             transition={{ duration: 1, ease: "easeInOut" }}

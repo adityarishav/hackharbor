@@ -17,9 +17,8 @@ const ChallengeCard = ({ challenge, isAdmin = false, onChallengeClick }) => {
 
   return (
     <div
-      className={`relative rounded-lg bg-gray-800 shadow-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 ${
-        challenge.is_deleted && isAdmin ? 'opacity-50 grayscale' : ''
-      }`}
+      className={`relative glass-card rounded-xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 group ${challenge.is_deleted && isAdmin ? 'opacity-50 grayscale' : ''
+        }`}
       onClick={handleCardClick}
     >
       {challenge.is_deleted && isAdmin && (
@@ -29,31 +28,28 @@ const ChallengeCard = ({ challenge, isAdmin = false, onChallengeClick }) => {
       )}
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-white">{challenge.title}</h3>
+          <h3 className="text-xl font-bold text-white group-hover:text-purple-300 transition-colors">{challenge.title}</h3>
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              difficultyColors[challenge.difficulty] || 'bg-gray-600'
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold shadow-lg ${difficultyColors[challenge.difficulty] || 'bg-gray-600'
+              }`}
           >
             {challenge.difficulty}
           </span>
         </div>
-        <p className="text-gray-400 text-sm mb-4 line-clamp-2">{challenge.description}</p>
-        <div className="flex items-center justify-between text-gray-400 text-sm">
+        <p className="text-gray-400 text-sm mb-4 line-clamp-2 group-hover:text-gray-300 transition-colors">{challenge.description}</p>
+        <div className="flex items-center justify-between text-gray-400 text-sm border-t border-white/5 pt-4">
           <div className="flex items-center">
-            <FaTrophy className="mr-1" />
+            <FaTrophy className="mr-2 text-yellow-500" />
             <span>{challenge.category || 'N/A'}</span>
           </div>
           <div className="flex items-center">
-            <FaStar className="mr-1" />
+            <FaStar className="mr-2 text-purple-400" />
             <span>{challenge.points || 0} Points</span>
           </div>
         </div>
       </div>
       {isAdmin && (
         <div className="absolute top-2 right-2 flex space-x-2">
-          {/* Admin actions can go here, e.g., edit/delete buttons */}
-          {/* For now, just a placeholder or can be passed as props */}
         </div>
       )}
     </div>

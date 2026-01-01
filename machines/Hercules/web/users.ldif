@@ -1,0 +1,37 @@
+# 1. The Domain Root
+dn: dc=hercules,dc=htb
+objectClass: dcObject
+objectClass: organization
+o: Hercules Corp
+dc: hercules
+
+# 2. The Users Container
+dn: ou=users,dc=hercules,dc=htb
+objectClass: organizationalUnit
+ou: users
+
+# 3. The Users (Matches your notes)
+dn: cn=natalie.a,ou=users,dc=hercules,dc=htb
+objectClass: inetOrgPerson
+cn: natalie.a
+sn: natalie
+userPassword: Summer2023!
+description: Web Admin
+
+dn: cn=bob.w,ou=users,dc=hercules,dc=htb
+objectClass: inetOrgPerson
+cn: bob.w
+sn: bob
+userPassword: SecurePass123!
+
+dn: cn=auditor,ou=users,dc=hercules,dc=htb
+objectClass: inetOrgPerson
+cn: auditor
+sn: auditor
+userPassword: AuditMeIfYouCan!
+
+dn: cn=iis_webserver,ou=users,dc=hercules,dc=htb
+objectClass: inetOrgPerson
+cn: iis_webserver
+sn: server
+userPassword: ServerPass99!

@@ -10,3 +10,4 @@ cffi==1.15.1
 python-jose[cryptography]
 docker
 python-multipart
+aiosmtplib
