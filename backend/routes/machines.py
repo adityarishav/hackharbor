@@ -5,7 +5,39 @@ import models, database, auth, schemas
 from docker_utils import get_or_create_docker_network, VULNVERSE_NETWORK_NAME
 import docker
 
+
 router = APIRouter()
+
+def add_vpn_route(container):
+    
+    try:
+        client = docker.from_env()
+        # Find OpenVPN container IP dynamically
+        try:
+            vpn_container = client.containers.get("openvpn_server")
+            vpn_ip = vpn_container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
+        except Exception:
+            print("Failed to find 'openvpn_server' container to configure routes.")
+            return
+
+        command = f"ip route add 192.168.255.0/24 via {vpn_ip}"
+        legacy_command = f"route add -net 192.168.255.0 netmask 255.255.255.0 gw {vpn_ip}"
+        
+        # Try 'ip route' first
+        exit_code, output = container.exec_run(command)
+        if exit_code != 0:
+            print(f"ip route failed: {output.decode()}. Trying 'route add'...")
+            # Fallback to legacy 'route'
+            exit_code, output = container.exec_run(legacy_command)
+            if exit_code != 0:
+                print(f"Route add failed: {output.decode()}")
+            else:
+                print(f"Route added via 'route' command to {container.name}")
+        else:
+             print(f"Route added via 'ip route' to {container.name}")
+
+    except Exception as e:
+        print(f"Error executing route add on container {container.name}: {e}")
 
 @router.get("/machines/", response_model=list[schemas.Machine])
 def read_machines(skip: int = 0, limit: int = 100, search: str | None = None, show_deleted: bool = False, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
@@ -125,10 +157,14 @@ def start_machine(machine_id: int, db: Session = Depends(database.get_db), curre
                 name=container_name,
                 detach=True,
                 network=network.name,
-                ports=ports_to_publish
+                ports=ports_to_publish,
+                cap_add=["NET_ADMIN"]
             )
             container.reload()
             ip_address = container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
+
+            #  Route
+            add_vpn_route(container)
 
             # Update the database with the new IP address
             db_machine.ip_address = ip_address
@@ -228,10 +264,14 @@ def restart_machine(machine_id: int, db: Session = Depends(database.get_db), cur
             name=container_name,
             detach=True,
             network=network.name,
-            ports=ports_to_publish
+            ports=ports_to_publish,
+            cap_add=["NET_ADMIN"]
         )
         container.reload()
         ip_address = container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
+
+        #  Route
+        add_vpn_route(container)
 
         
         db_machine.ip_address = ip_address

@@ -19,7 +19,9 @@ RUN apt-get update && apt-get install -y \
     ldb-tools \
     dnsutils \
     net-tools \
+    curl \
     iputils-ping \
+    iproute2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Environment Variables

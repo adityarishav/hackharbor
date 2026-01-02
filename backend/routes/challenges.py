@@ -12,6 +12,36 @@ if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
 
+def add_vpn_route(container):
+   
+    try:
+        client = docker.from_env()
+        # Find OpenVPN container IP dynamically
+        try:
+            vpn_container = client.containers.get("openvpn_server")
+            vpn_ip = vpn_container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
+        except Exception:
+            print("Failed to find 'openvpn_server' container to configure routes.")
+            return
+
+        command = f"ip route add 192.168.255.0/24 via {vpn_ip}"
+        legacy_command = f"route add -net 192.168.255.0 netmask 255.255.255.0 gw {vpn_ip}"
+        
+        # Try 'ip route' first
+        exit_code, output = container.exec_run(command)
+        if exit_code != 0:
+            print(f"ip route failed: {output.decode()}. Trying 'route add'...")
+            # Fallback to legacy 'route'
+            exit_code, output = container.exec_run(legacy_command)
+            if exit_code != 0:
+                print(f"Route add failed: {output.decode()}")
+            else:
+                print(f"Route added via 'route' command to {container.name}")
+        else:
+             print(f"Route added via 'ip route' to {container.name}")
+
+    except Exception as e:
+        print(f"Error executing route add on container {container.name}: {e}")
 
 @router.post("/admin/challenges", response_model=schemas.Challenge)
 def create_admin_challenge(
@@ -244,9 +274,11 @@ def start_challenge(challenge_id: int, db: Session = Depends(database.get_db), c
             name=container_name,
             detach=True,
             network=network.name,
+            cap_add=["NET_ADMIN"]
         )
         container.reload()
         challenge_ip_address = container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
+        add_vpn_route(container)
 
         db_challenge.ip_address = challenge_ip_address
         db.add(db_challenge)
@@ -326,9 +358,11 @@ def restart_admin_challenge(challenge_id: int, db: Session = Depends(database.ge
             name=container_name,
             detach=True,
             network=network.name,
+            cap_add=["NET_ADMIN"]
         )
         container.reload()
         challenge_ip_address = container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
+        add_vpn_route(container)
 
         db_challenge.ip_address = challenge_ip_address
    
@@ -385,9 +419,11 @@ def start_challenge_user(challenge_id: int, db: Session = Depends(database.get_d
             name=container_name,
             detach=True,
             network=network.name,
+            cap_add=["NET_ADMIN"]
         )
         container.reload()
         challenge_ip_address = container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
+        add_vpn_route(container)
 
         db_challenge.ip_address = challenge_ip_address
         db.add(db_challenge)
@@ -482,9 +518,13 @@ def restart_challenge_user(challenge_id: int, db: Session = Depends(database.get
             name=container_name,
             detach=True,
             network=network.name,
+            cap_add=["NET_ADMIN"]
         )
         container.reload()
         challenge_ip_address = container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
+
+        #  Route
+        add_vpn_route(container)
 
         # --- Step 4: Update DB with new IP 
         db_challenge.ip_address = challenge_ip_address
@@ -523,3 +563,4 @@ def get_leaderboard(db: Session = Depends(database.get_db)):
     leaderboard_data.sort(key=lambda x: x['score'], reverse=True)
     
     return leaderboard_data
+

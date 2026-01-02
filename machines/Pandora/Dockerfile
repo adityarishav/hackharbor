@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     net-tools \
     curl \
     iputils-ping \
+    iproute2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies for the Bot
@@ -45,9 +46,17 @@ COPY src/ /var/www/html/
 COPY bot/ /opt/bot/
 
 # Copy PrivEsc Binary
-COPY bin/check_status.sh /usr/local/bin/check_status
-RUN chmod +x /usr/local/bin/check_status && \
-    chmod u+s /usr/local/bin/check_status
+# Copy PrivEsc Binary and Wrapper
+COPY bin/check_status.sh /opt/pandora/check_status.sh
+COPY bin/check_status_wrapper.c /tmp/check_status_wrapper.c
+
+# Compile wrapper and set permissions
+RUN apt-get update && apt-get install -y gcc && \
+    gcc /tmp/check_status_wrapper.c -o /usr/local/bin/check_status && \
+    chmod +x /usr/local/bin/check_status && \
+    chmod u+s /usr/local/bin/check_status && \
+    chmod +x /opt/pandora/check_status.sh && \
+    rm /tmp/check_status_wrapper.c
 
 # Flag Setup
 RUN echo "HH{NTLM_R3l4y_M4st3r}" > /root/root.txt
