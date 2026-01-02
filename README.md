@@ -26,6 +26,8 @@ docker-compose up --build -d
 
 - To do the PostgreSQL migration and database setup run this
 ```shell
+docker exec hackharbor-backend alembic stamp head
+
 docker exec hackharbor-backend alembic upgrade head
 ```
 - Initial admin setup
