@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  cerberus:
+    build: .
+    container_name: cerberus
+    hostname: cerberus
+    domainname: cerberus.local
+    # Privileged needed for some Samba AD operations and network
+    privileged: true
+    ports:
+      - "53:53"
+      - "53:53/udp"
+      - "88:88"
+      - "88:88/udp"
+      - "389:389"
+      - "389:389/udp"
+      # Host 445 conflicts are common. For CTF, user might need to use a different port 
+      # or access via IP alias if on Linux. We'll expose as is.
+      - "445:445"
+      - "464:464"
+      - "464:464/udp"
+      - "636:636"
+    networks:
+      hackharbor_network:
+        ipv4_address: 172.20.0.100
+
+networks:
+  hackharbor_network:
+    external: true

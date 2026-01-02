@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  pandora:
+    build: .
+    container_name: pandora
+    ports:
+      - "8085:80"        # Exposed Web Port
+      - "445:445"        # Exposed SMB Port (Host 445 might be busy, but for CTF this is needed)
+    networks:
+      - hackharbor_network
+    restart: always
+
+networks:
+  hackharbor_network:
+    external: true
