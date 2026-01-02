@@ -13,7 +13,10 @@ if not os.path.exists(UPLOAD_DIRECTORY):
 
 
 def add_vpn_route(container):
-   
+    """
+    Attempts to add a route to the Docker VPN subnet (192.168.255.0/24) via the OpenVPN container.
+    This allows the machine (container) to reach clients connected via VPN.
+    """
     try:
         client = docker.from_env()
         # Find OpenVPN container IP dynamically
@@ -121,10 +124,12 @@ def read_challenges(skip: int = 0, limit: int = 100, db: Session = Depends(datab
     return challenges
 
 @router.get("/challenges/{challenge_id}", response_model=schemas.Challenge)
-def read_challenge(challenge_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
-    db_challenge = db.query(models.Challenge).options(selectinload(models.Challenge.active_users), selectinload(models.Challenge.flags)).filter(models.Challenge.id == challenge_id).first()
+def read_challenge(challenge_id: int, db: Session = Depends(database.get_db)):
+    db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if db_challenge is None:
         raise HTTPException(status_code=404, detail="Challenge not found")
+    print(f"DEBUG: read_challenge {challenge_id} IP: {db_challenge.ip_address}")
+    print(f"DEBUG: read_challenge {challenge_id} Active Users: {[u.username for u in db_challenge.active_users]}")
     return db_challenge
 
 @router.get("/challenges/{challenge_id}/flags_status", response_model=list[dict])
@@ -241,7 +246,7 @@ def delete_challenge(challenge_id: int, db: Session = Depends(database.get_db), 
     db.refresh(db_challenge)
     return {"message": "Challenge soft-deleted successfully"}
 
-@router.post("/admin/challenges/{challenge_id}/start", response_model=schemas.Challenge)
+@router.post("/admin/challenges/{challenge_id}/start")
 def start_challenge(challenge_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_admin_user)):
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if not db_challenge:
@@ -250,7 +255,12 @@ def start_challenge(challenge_id: int, db: Session = Depends(database.get_db), c
         raise HTTPException(status_code=400, detail="Challenge does not have a Docker image configured.")
 
     if db_challenge.ip_address:
-        return db_challenge
+         # Adding the current user to the list of active users if not already there
+        if current_user not in db_challenge.active_users:
+            db_challenge.active_users.append(current_user)
+            db.commit()
+            db.refresh(db_challenge)
+        return {"message": f"Challenge {db_challenge.title} is already running at {db_challenge.ip_address}"}
 
     try:
         client = docker.from_env()
@@ -283,12 +293,18 @@ def start_challenge(challenge_id: int, db: Session = Depends(database.get_db), c
         db_challenge.ip_address = challenge_ip_address
         db.add(db_challenge)
         db.commit()
-        db.refresh(db_challenge)
-        return db_challenge
+        
+        # Add admin to active users
+        if current_user not in db_challenge.active_users:
+            db_challenge.active_users.append(current_user)
+            db.commit()
+            db.refresh(db_challenge)
+            
+        return {"message": f"Challenge {db_challenge.title} started. IP: {challenge_ip_address}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to start Docker container for challenge: {e}")
 
-@router.post("/admin/challenges/{challenge_id}/stop", response_model=schemas.Challenge)
+@router.post("/admin/challenges/{challenge_id}/stop")
 def stop_challenge(challenge_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_admin_user)):
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if not db_challenge:
@@ -297,7 +313,7 @@ def stop_challenge(challenge_id: int, db: Session = Depends(database.get_db), cu
         raise HTTPException(status_code=400, detail="Challenge does not have a Docker image configured.")
 
     if not db_challenge.ip_address:
-        return db_challenge
+        return {"message": "Challenge is not running."}
 
     try:
         client = docker.from_env()
@@ -311,16 +327,17 @@ def stop_challenge(challenge_id: int, db: Session = Depends(database.get_db), cu
             pass
 
         db_challenge.ip_address = None
+        db_challenge.active_users.clear() # clear all users since admin stopped it
         db.add(db_challenge)
         db.commit()
         db.refresh(db_challenge)
-        return db_challenge
+        return {"message": f"Challenge {db_challenge.title} stopped globally."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to stop Docker container for challenge: {e}")
 
 
 
-@router.post("/admin/challenges/{challenge_id}/restart", response_model=schemas.Challenge)
+@router.post("/admin/challenges/{challenge_id}/restart")
 def restart_admin_challenge(challenge_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_admin_user)):
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if not db_challenge:
@@ -368,6 +385,11 @@ def restart_admin_challenge(challenge_id: int, db: Session = Depends(database.ge
    
         db.add(db_challenge)
         db.commit()
+        
+        # Add admin to active users
+        db_challenge.active_users.append(current_user)
+        db.add(db_challenge)
+        db.commit() 
         db.refresh(db_challenge)
 
         return {"message": f"Challenge {db_challenge.title} has been restarted successfully. New IP is {challenge_ip_address}."}
@@ -375,21 +397,15 @@ def restart_admin_challenge(challenge_id: int, db: Session = Depends(database.ge
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred during challenge restart: {e}")
 
 
-@router.post("/challenges/{challenge_id}/start", response_model=schemas.Challenge)
+@router.post("/challenges/{challenge_id}/start")
 def start_challenge_user(challenge_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
-    db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
+    db_challenge = db.query(models.Challenge).options(selectinload(models.Challenge.active_users)).filter(models.Challenge.id == challenge_id).first()
     if not db_challenge:
         raise HTTPException(status_code=404, detail="Challenge not found")
     if not db_challenge.docker_image:
         raise HTTPException(status_code=400, detail="Challenge does not have a Docker image configured.")
 
-    if current_user not in db_challenge.active_users:
-        db_challenge.active_users.append(current_user)
-        db.commit()
-        db.refresh(db_challenge)
-    else:
-        
-        return db_challenge 
+ 
 
     
     if db_challenge.ip_address:
@@ -428,16 +444,26 @@ def start_challenge_user(challenge_id: int, db: Session = Depends(database.get_d
         db_challenge.ip_address = challenge_ip_address
         db.add(db_challenge)
         db.commit()
-        db.refresh(db_challenge)
-        print(f"--- After start_challenge_user: active_users={[user.username for user in db_challenge.active_users]}, ip_address={db_challenge.ip_address} ---")
-        return db_challenge
+
+        # Adding the current user to the list of active users
+        print(f"DEBUG: Before append - Active Users: {[u.username for u in db_challenge.active_users]}")
+        if current_user not in db_challenge.active_users:
+            print(f"DEBUG: Appending user {current_user.username}")
+            db_challenge.active_users.append(current_user)
+            db.commit()
+            db.refresh(db_challenge)
+            print(f"DEBUG: After commit/refresh - Active Users: {[u.username for u in db_challenge.active_users]}")
+        else:
+             print(f"DEBUG: User {current_user.username} ALREADY in active_users")
+        
+        return {"message": f"Challenge {db_challenge.title} started. IP: {challenge_ip_address}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to start Docker container for challenge: {e}")
 
 
-@router.post("/challenges/{challenge_id}/stop", response_model=schemas.Challenge)
+@router.post("/challenges/{challenge_id}/stop")
 def stop_challenge_user(challenge_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
-    db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
+    db_challenge = db.query(models.Challenge).options(selectinload(models.Challenge.active_users)).filter(models.Challenge.id == challenge_id).first()
     if not db_challenge:
         raise HTTPException(status_code=404, detail="Challenge not found")
     if not db_challenge.docker_image:
@@ -448,7 +474,6 @@ def stop_challenge_user(challenge_id: int, db: Session = Depends(database.get_db
         db_challenge.active_users.remove(current_user)
         db.commit()
         db.refresh(db_challenge)
-        print(f"--- After removing user from active_users: active_users={[user.username for user in db_challenge.active_users]}, ip_address={db_challenge.ip_address} ---")
     else:
         return {"message": "Challenge is no longer active for you."}
 
@@ -469,7 +494,6 @@ def stop_challenge_user(challenge_id: int, db: Session = Depends(database.get_db
             db.add(db_challenge)
             db.commit()
             db.refresh(db_challenge)
-            print(f"--- After stopping challenge globally: active_users={[user.username for user in db_challenge.active_users]}, ip_address={db_challenge.ip_address} ---")
             return {"message": f"Challenge {db_challenge.title} stopped globally."}
             
         except Exception as e:
@@ -477,9 +501,9 @@ def stop_challenge_user(challenge_id: int, db: Session = Depends(database.get_db
 
     return {"message": f"Challenge {db_challenge.title} is no longer active for you, but remains running for other users."}
 
-@router.post("/challenges/{challenge_id}/restart", response_model=schemas.Challenge)
+@router.post("/challenges/{challenge_id}/restart")
 def restart_challenge_user(challenge_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
-    db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
+    db_challenge = db.query(models.Challenge).options(selectinload(models.Challenge.active_users)).filter(models.Challenge.id == challenge_id).first()
     if not db_challenge:
         raise HTTPException(status_code=404, detail="Challenge not found")
     if not db_challenge.docker_image:
@@ -523,11 +547,14 @@ def restart_challenge_user(challenge_id: int, db: Session = Depends(database.get
         container.reload()
         challenge_ip_address = container.attrs['NetworkSettings']['Networks'][VULNVERSE_NETWORK_NAME]['IPAddress']
 
-        #  Route
+        # Fix Route
         add_vpn_route(container)
 
         # --- Step 4: Update DB with new IP 
         db_challenge.ip_address = challenge_ip_address
+        db.add(db_challenge)
+        db.commit()
+
         db_challenge.active_users.append(current_user)
         db.add(db_challenge)
         db.commit()
