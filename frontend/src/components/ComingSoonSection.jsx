@@ -17,10 +17,15 @@ const ComingSoonSection = () => {
           api.get('/machines/upcoming'),
           api.get('/ch/upcoming')
         ]);
-        
+
 
         setUpcomingMachines(machinesRes.data);
-        setUpcomingChallenges(challengesRes.data);
+
+        // Filter out duplicates by title
+        const uniqueChallenges = challengesRes.data.filter((challenge, index, self) =>
+          index === self.findIndex((t) => t.title === challenge.title)
+        );
+        setUpcomingChallenges(uniqueChallenges);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       }
@@ -60,7 +65,6 @@ const ComingSoonSection = () => {
                 <p className="text-xs text-gray-400 mb-2">
                   Difficulty: {challenge.difficulty} | Points: {challenge.points}
                 </p>
-                <p className="text-sm text-gray-300">{challenge.description}</p>
               </div>
             )) : (
               <div className="glass-card p-6 rounded-xl">
