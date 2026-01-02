@@ -174,6 +174,8 @@ class Challenge(ChallengeBase):
     ip_address: str | None = None 
     is_deleted: bool
     flags: list[ChallengeFlag] = [] 
+    active_users: list[User] = []
+    
     class Config:
         from_attributes = True
 
