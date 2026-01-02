@@ -94,7 +94,7 @@ function ChallengeDetail() {
   // Check if the current user is active on this challenge
   useEffect(() => {
     if (challenge && currentUserId && challenge.active_users) {
-      setIsChallengeActiveForUser(challenge.active_users.some(user => user.id === currentUserId));
+      setIsChallengeActiveForUser(challenge.active_users.some(user => user.id == currentUserId));
     } else {
       setIsChallengeActiveForUser(false);
     }
@@ -106,14 +106,14 @@ function ChallengeDetail() {
     try {
       const token = localStorage.getItem('access_token');
       const endpoint = isAdmin ? `/admin/challenges/${challenge.id}/start` : `/challenges/${challenge.id}/start`;
-      const response = await api.post(endpoint, {}, {
+      await api.post(endpoint, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       showNotification('Challenge started!', 'success');
-      setChallenge(response.data); // Update challenge state with new IP
-      setIsChallengeActiveForUser(true);
+      setIsChallengeActiveForUser(true); // Manually set active state
+      fetchChallengeDetails();
     } catch (err) {
       console.error('Failed to start challenge:', err);
       showNotification(err.response?.data?.detail || 'Failed to start challenge!', 'error');
@@ -127,14 +127,14 @@ function ChallengeDetail() {
     try {
       const token = localStorage.getItem('access_access');
       const endpoint = isAdmin ? `/admin/challenges/${challenge.id}/stop` : `/challenges/${challenge.id}/stop`;
-      const response = await api.post(endpoint, {}, {
+      await api.post(endpoint, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       showNotification('Challenge stopped!', 'success');
-      setChallenge(response.data); // Update challenge state with null IP
-      setIsChallengeActiveForUser(false);
+      setIsChallengeActiveForUser(false); // Manually set active state
+      fetchChallengeDetails();
     } catch (err) {
       console.error('Failed to stop challenge:', err);
       showNotification(err.response?.data?.detail || 'Failed to stop challenge!', 'error');
@@ -148,14 +148,14 @@ function ChallengeDetail() {
     try {
       const token = localStorage.getItem('access_token');
       const endpoint = isAdmin ? `/admin/challenges/${challenge.id}/restart` : `/challenges/${challenge.id}/restart`;
-      const response = await api.post(endpoint, {}, {
+      await api.post(endpoint, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       showNotification('Challenge restarted!', 'success');
-      setChallenge(response.data); // Update challenge state with new IP
-      setIsChallengeActiveForUser(true); // User is active after restart
+      setIsChallengeActiveForUser(true); // Manually set active state
+      fetchChallengeDetails();
     } catch (err) {
       console.error('Failed to restart challenge:', err);
       showNotification(err.response?.data?.detail || 'Failed to restart challenge!', 'error');
@@ -247,11 +247,11 @@ function ChallengeDetail() {
           )}
           {challenge.docker_image && isChallengeActiveForUser && ( // Check isChallengeActiveForUser
             <button
-              onClick={handleStopChallenge}
+              onClick={''}
               disabled={isStarting || isStopping}
               className="px-6 py-3 bg-red-600/80 hover:bg-red-600 backdrop-blur-sm rounded-xl text-white font-semibold transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-900/20 border border-white/10"
             >
-              {isStopping ? 'Stopping...' : <><FaStop className="mr-2" /> Stop Challenge</>}
+              {isStopping ? 'Stopping...' : <><FaStop className="mr-2" /> Challenge Started</>}
             </button>
           )}
           {challenge.docker_image && ( // Reset is available if docker_image exists
