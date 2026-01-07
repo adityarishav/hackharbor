@@ -175,6 +175,7 @@ const AddChallengePage = () => {
                                     <option>Misc</option>
                                     <option>Pwn</option>
                                     <option>Reversing</option>
+	    			                <option>Networking</option>
                                     <option>BlockChsin</option>
                                 </select>
                             </div>

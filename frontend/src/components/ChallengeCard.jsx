@@ -36,7 +36,7 @@ const ChallengeCard = ({ challenge, isAdmin = false, onChallengeClick }) => {
             {challenge.difficulty}
           </span>
         </div>
-        <p className="text-gray-400 text-sm mb-4 line-clamp-2 group-hover:text-gray-300 transition-colors">{challenge.description}</p>
+        <p className="text-gray-400 text-sm mb-4 line-clamp-2 group-hover:text-gray-300 transition-colors">   </p>
         <div className="flex items-center justify-between text-gray-400 text-sm border-t border-white/5 pt-4">
           <div className="flex items-center">
             <FaTrophy className="mr-2 text-yellow-500" />

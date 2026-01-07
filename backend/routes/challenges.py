@@ -13,10 +13,7 @@ if not os.path.exists(UPLOAD_DIRECTORY):
 
 
 def add_vpn_route(container):
-    """
-    Attempts to add a route to the Docker VPN subnet (192.168.255.0/24) via the OpenVPN container.
-    This allows the machine (container) to reach clients connected via VPN.
-    """
+   
     try:
         client = docker.from_env()
         # Find OpenVPN container IP dynamically
@@ -590,4 +587,5 @@ def get_leaderboard(db: Session = Depends(database.get_db)):
     leaderboard_data.sort(key=lambda x: x['score'], reverse=True)
     
     return leaderboard_data
+
 
