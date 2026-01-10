@@ -6,9 +6,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 
-MAIL_USERNAME = "adityarishav1@gmail.com"
-MAIL_PASSWORD = "igvz nqwp bqpb vlbw"
-MAIL_FROM = "adityarishav1@gmail.com"
+MAIL_USERNAME = "<email>"
+MAIL_PASSWORD = "<email_app_secret>"
+MAIL_FROM = "<email>"
 MAIL_PORT = 587
 MAIL_SERVER = "smtp.gmail.com"
 MAIL_FROM_NAME = "HackHarbor"
