@@ -72,6 +72,9 @@ def update_user_me(user_update: schemas.UserUpdate, db: Session = Depends(databa
         if existing_user and existing_user.id != current_user.id:
             raise HTTPException(status_code=400, detail="Email already registered")
         current_user.email = user_update.email
+    
+    if user_update.country:
+        current_user.country = user_update.country
 
     db.add(current_user)
     db.commit()
@@ -296,6 +299,7 @@ def get_user_profile(db: Session = Depends(database.get_db), current_user: model
         "username": current_user.username,
         "email": current_user.email,
         "role": current_user.role,
+        "country": current_user.country,
         "total_score": total_score,
         "rank": rank,
         "solved_challenges": solved_challenges,

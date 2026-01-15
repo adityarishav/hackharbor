@@ -3,6 +3,8 @@ import api from '../services/api';
 import { useNotification } from '../components/Notification';
 import { motion } from 'framer-motion';
 import { FaTrophy, FaFlag, FaServer, FaUserCircle, FaMedal, FaHistory, FaGlobe, FaBomb, FaBaby, FaUserSecret, FaSkull, FaChartPie, FaCalendarAlt } from 'react-icons/fa';
+
+import { getCountryFlagUrl } from '../constants/countries';
 import {
     Chart as ChartJS,
     RadialLinearScale,
@@ -114,9 +116,21 @@ const ProfilePage = () => {
                         </div>
                     </div>
                     <div className="text-center md:text-left flex-grow">
-                        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-2">
-                            {profile.username}
-                        </h1>
+                        <div className="flex items-center gap-3 mb-2">
+                            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+                                {profile.username}
+                            </h1>
+                            {profile.country ? (
+                                <img
+                                    src={getCountryFlagUrl(profile.country)}
+                                    alt={profile.country}
+                                    className="h-8 w-auto rounded shadow-sm hover:scale-110 transition-transform cursor-help"
+                                    title={profile.country}
+                                />
+                            ) : (
+                                <FaGlobe className="text-3xl text-blue-400 hover:text-blue-300 transition-colors cursor-help" title="Global / No Country Selected" />
+                            )}
+                        </div>
                         <p className="text-gray-400 mb-4">{profile.email}</p>
                         <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                             <span className="px-4 py-1.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-sm font-medium">

@@ -34,6 +34,7 @@ class User(UserBase):
     created_at: datetime
     role: str
     email: str | None = None
+    country: str | None = None
     active_machines: list[MachineSummary] = []
     active_challenges: list[ChallengeSummary] = []
 
@@ -45,6 +46,7 @@ class UserUpdate(BaseModel):
     password: str | None = None
     current_password: str | None = None
     role: str | None = None
+    country: str | None = None
 
 class FlagBase(BaseModel):
     flag: str

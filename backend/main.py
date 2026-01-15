@@ -16,6 +16,11 @@ if not os.path.exists(UPLOAD_DIRECTORY):
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIRECTORY), name="uploads")
 
+STATIC_DIRECTORY = "static"
+if not os.path.exists(STATIC_DIRECTORY):
+    os.makedirs(STATIC_DIRECTORY)
+app.mount("/static", StaticFiles(directory=STATIC_DIRECTORY), name="static")
+
 
 app.include_router(auth.auth_router) # Token endpoints
 app.include_router(auth_routes.router) # Registration endpoints

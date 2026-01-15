@@ -25,7 +25,7 @@ const Navbar = () => {
     };
 
     checkVpnStatus();
-    const interval = setInterval(checkVpnStatus, 10000); 
+    const interval = setInterval(checkVpnStatus, 10000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -43,7 +43,7 @@ const Navbar = () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        responseType: 'blob', 
+        responseType: 'blob',
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -61,7 +61,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 px-6 py-4">
+    <header className="sticky top-0 z-[900] px-6 py-4">
       <nav className="container mx-auto glass-panel rounded-2xl px-6 py-3 flex justify-between items-center">
 
         {/* Left Section: Logo */}
@@ -87,7 +87,7 @@ const Navbar = () => {
           <NavLink to="/challenges" className={getNavLinkClass}>
             Challenges
           </NavLink>
-          
+
 
 
 

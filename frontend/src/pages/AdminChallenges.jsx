@@ -13,6 +13,7 @@ const AdminChallenges = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const handleStartChallenge = async (challengeId) => {
     try {
@@ -76,21 +77,45 @@ const AdminChallenges = () => {
     fetchChallenges();
   }, []);
 
+  const handleResetSeason = async () => {
+    if (window.confirm('Are you sure you want to reset the leaderboard for the new season? This will hide all previous scores from the public leaderboard. User career stats will remain unchanged.')) {
+      try {
+        const token = localStorage.getItem('access_token');
+        await api.post('/admin/leaderboard/reset', {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        addNotification('Leaderboard reset for new season successfully!', 'success');
+      } catch (error) {
+        console.error('Failed to reset leaderboard:', error);
+        addNotification('Failed to reset leaderboard.', 'error');
+      }
+    }
+  };
+
   const filteredChallenges = challenges
     .filter(challenge => challenge.title.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter(challenge => categoryFilter ? challenge.category === categoryFilter : true)
-    .filter(challenge => difficultyFilter ? challenge.difficulty === difficultyFilter : true);
+    .filter(challenge => difficultyFilter ? challenge.difficulty === difficultyFilter : true)
+    .filter(challenge => {
+      if (!statusFilter) return true;
+      if (statusFilter === 'active') return !challenge.is_deleted;
+      if (statusFilter === 'deleted') return challenge.is_deleted;
+      return true;
+    });
 
   return (
     <AdminPageLayout title="Manage Challenges">
-      <div className="mb-4 flex items-center justify-between">
-        <input
-          type="text"
-          placeholder="Search by title..."
-          className="rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <div className="flex gap-4">
+      <div className="mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex-grow w-full md:w-auto">
+          <input
+            type="text"
+            placeholder="Search by title..."
+            className="w-full rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="flex gap-4 w-full md:w-auto">
           <select
             className="rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
             onChange={(e) => setCategoryFilter(e.target.value)}
@@ -112,6 +137,20 @@ const AdminChallenges = () => {
             <option value="Hard">Hard</option>
             <option value="Insane">Insane</option>
           </select>
+          <select
+            className="rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="deleted">Deleted</option>
+          </select>
+          <button
+            onClick={handleResetSeason}
+            className="rounded-md bg-red-600 px-4 py-2.5 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 whitespace-nowrap"
+          >
+            Reset Season
+          </button>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

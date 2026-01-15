@@ -11,6 +11,7 @@ const MachineTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [osFilter, setOsFilter] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const fetchMachines = async () => {
     try {
@@ -48,7 +49,14 @@ const MachineTable = () => {
   const filteredMachines = machines
     .filter(machine => machine.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter(machine => osFilter ? machine.operating_system === osFilter : true)
-    .filter(machine => difficultyFilter ? machine.difficulty === difficultyFilter : true);
+    .filter(machine => difficultyFilter ? machine.difficulty === difficultyFilter : true)
+    .filter(machine => {
+      if (!statusFilter) return true;
+      if (statusFilter === 'active') return !machine.is_deleted && machine.status !== 'upcoming';
+      if (statusFilter === 'upcoming') return machine.status === 'upcoming' && !machine.is_deleted;
+      if (statusFilter === 'deleted') return machine.is_deleted;
+      return true;
+    });
 
   return (
     <div>
@@ -76,7 +84,17 @@ const MachineTable = () => {
             <option value="Easy">Easy</option>
             <option value="Medium">Medium</option>
             <option value="Hard">Hard</option>
+            <option value="Hard">Hard</option>
             <option value="Insane">Insane</option>
+          </select>
+          <select
+            className="rounded-md border-gray-600 bg-gray-700 p-2.5 text-white focus:ring-2 focus:ring-purple-500"
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="deleted">Deleted</option>
           </select>
         </div>
       </div>

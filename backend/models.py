@@ -24,6 +24,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password = Column(String)
     role = Column(String, default="user") 
+    country = Column(String, nullable=True) # ISO 3166-1 alpha-2 code
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     submissions = relationship("Submission", back_populates="user")
@@ -215,3 +216,8 @@ class OTPCode(Base):
     payload = Column(String, nullable=True)  # JSON string for registration data
     expires_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class SystemConfig(Base):
+    __tablename__ = "system_config"
+    key = Column(String, primary_key=True, index=True)
+    value = Column(String)

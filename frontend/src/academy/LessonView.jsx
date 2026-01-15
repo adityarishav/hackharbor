@@ -13,6 +13,9 @@ const LessonView = () => {
     const navigate = useNavigate();
     const [lesson, setLesson] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [module, setModule] = useState(null);
+    const [nextLessonId, setNextLessonId] = useState(null);
+    const [prevLessonId, setPrevLessonId] = useState(null);
 
     useEffect(() => {
         fetchLesson();
@@ -26,10 +29,57 @@ const LessonView = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setLesson(response.data);
+
+            // Fetch module to determine nav
+            if (response.data.module_id) {
+                fetchModule(response.data.module_id, response.data.id);
+            }
         } catch (error) {
             console.error('Failed to fetch lesson:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchModule = async (moduleId, currentLessonId) => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await api.get(`/academy/modules/${moduleId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const mod = response.data;
+            setModule(mod);
+
+            if (mod.lessons && mod.lessons.length > 0) {
+                // Sort lessons by order
+                const sortedLessons = mod.lessons.sort((a, b) => a.order - b.order);
+                const currentIndex = sortedLessons.findIndex(l => l.id === currentLessonId);
+
+                if (currentIndex !== -1) {
+                    if (currentIndex > 0) {
+                        setPrevLessonId(sortedLessons[currentIndex - 1].id);
+                    } else {
+                        setPrevLessonId(null);
+                    }
+
+                    if (currentIndex < sortedLessons.length - 1) {
+                        setNextLessonId(sortedLessons[currentIndex + 1].id);
+                    } else {
+                        setNextLessonId(null);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch module for nav:', error);
+        }
+    };
+
+    const handleNext = () => {
+        if (nextLessonId) {
+            navigate(`/academy/lesson/${nextLessonId}`);
+        } else {
+            // End of module, go back to module or dashboard
+            navigate(`/academy/module/${lesson.module_id}`);
         }
     };
 
@@ -128,12 +178,77 @@ const LessonView = () => {
                                 return <li className="ml-4">{children}</li>
                             },
                             p({ children }) {
+                                // Helper to extract text from React children
+                                const flattenText = (child) => {
+                                    if (typeof child === 'string') return child;
+                                    if (Array.isArray(child)) return child.map(flattenText).join('');
+                                    if (React.isValidElement(child) && child.props.children) {
+                                        return flattenText(child.props.children);
+                                    }
+                                    return '';
+                                };
+
+                                const textContent = flattenText(children);
+
+                                // Regex to find custom syntax: @youtube url OR @[youtube](url)
+                                // Only matches if the URL is "close" to the directive to avoid false positives
+                                const customSyntaxRegex = /@(?:\[?youtube\]?)(?:[\s:(\[]+)?(https?:\/\/[^\s)\]]+)(?:[)\]])?/i;
+                                const customSyntaxMatch = textContent.match(customSyntaxRegex);
+
+                                let urlToCheck = textContent;
+                                let isCustom = false;
+
+                                if (customSyntaxMatch && customSyntaxMatch[1]) {
+                                    urlToCheck = customSyntaxMatch[1];
+                                    isCustom = true;
+                                }
+
+                                // Extract Video ID
+                                const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/;
+                                const match = urlToCheck.match(youtubeRegex);
+
+                                // Check if it's a "Plain URL" (the whole paragraph is basically just the URL)
+                                const isPlainUrl = !isCustom && urlToCheck.trim().match(/^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})(?:\S+)?$/);
+
+                                if (match && match[1] && (isCustom || isPlainUrl)) {
+                                    // If custom text mixed with video, we want to Keep the text but Remove the command
+                                    let contentToShow = null;
+                                    if (isCustom) {
+                                        // Remove the command from text
+                                        const cleanText = textContent.replace(customSyntaxRegex, '').trim();
+                                        if (cleanText) {
+                                            contentToShow = <p className="mb-4 text-gray-300 leading-relaxed">{cleanText}</p>;
+                                        }
+                                    }
+
+                                    return (
+                                        <div className="my-6">
+                                            {contentToShow}
+                                            <div className="aspect-video">
+                                                <iframe
+                                                    src={`https://www.youtube.com/embed/${match[1]}`}
+                                                    title="YouTube video player"
+                                                    frameBorder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                    className="w-full h-full rounded-xl border border-gray-700 shadow-lg"
+                                                ></iframe>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
                                 return <p className="mb-4 text-gray-300 leading-relaxed">{children}</p>
                             },
                             img({ src, alt }) {
+                                let finalSrc = src;
+                                if (src && (src.startsWith('/static') || src.startsWith('/uploads'))) {
+                                    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+                                    finalSrc = `${baseUrl}${src}`;
+                                }
                                 return (
                                     <div className="my-6">
-                                        <img src={src} alt={alt} className="rounded-lg border border-gray-700 shadow-lg max-w-full h-auto mx-auto" />
+                                        <img src={finalSrc} alt={alt} className="rounded-lg border border-gray-700 shadow-lg max-w-full h-auto mx-auto" />
                                         {alt && <p className="text-center text-sm text-gray-500 mt-2">{alt}</p>}
                                     </div>
                                 )
@@ -147,17 +262,21 @@ const LessonView = () => {
 
             <div className="mt-8 flex justify-between">
                 <button
-                    disabled
-                    className="px-6 py-3 rounded-lg border border-gray-700 text-gray-600 cursor-not-allowed flex items-center"
+                    onClick={() => prevLessonId && navigate(`/academy/lesson/${prevLessonId}`)}
+                    disabled={!prevLessonId}
+                    className={`px-6 py-3 rounded-lg border flex items-center ${prevLessonId
+                        ? 'border-gray-600 text-gray-300 hover:border-cyan-500 hover:text-cyan-400'
+                        : 'border-gray-800 text-gray-600 cursor-not-allowed'
+                        }`}
                 >
                     <FaChevronLeft className="mr-2" /> Previous
                 </button>
 
                 <button
-                    onClick={() => navigate(`/academy/module/${lesson.module_id}`)}
+                    onClick={handleNext}
                     className="px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold shadow-lg shadow-cyan-500/20 transition-all flex items-center"
                 >
-                    Complete & Continue <FaChevronRight className="ml-2" />
+                    {nextLessonId ? 'Complete & Continue' : 'Finish Module'} <FaChevronRight className="ml-2" />
                 </button>
             </div>
         </div>

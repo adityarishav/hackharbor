@@ -562,26 +562,67 @@ def restart_challenge_user(challenge_id: int, db: Session = Depends(database.get
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred during challenge restart: {e}")
 
 
+@router.post("/admin/leaderboard/reset")
+def reset_leaderboard(db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_admin_user)):
+    from datetime import datetime
+    
+    # Store the current timestamp as the start of the new season
+    start_date = datetime.utcnow().isoformat()
+    
+    config = db.query(models.SystemConfig).filter(models.SystemConfig.key == "leaderboard_start_date").first()
+    if not config:
+        config = models.SystemConfig(key="leaderboard_start_date", value=start_date)
+        db.add(config)
+    else:
+        config.value = start_date
+    
+    db.commit()
+    return {"message": "Leaderboard has been reset for the new season."}
+
 @router.get("/leaderboard", response_model=list[dict])
-def get_leaderboard(db: Session = Depends(database.get_db)):
-   
-    users = db.query(models.User).all()
+def get_leaderboard(country: str | None = None, db: Session = Depends(database.get_db)):
+    from datetime import datetime
+    
+    # Fetch season start date
+    config = db.query(models.SystemConfig).filter(models.SystemConfig.key == "leaderboard_start_date").first()
+    season_start = None
+    if config:
+        try:
+            season_start = datetime.fromisoformat(config.value)
+        except ValueError:
+            pass
+
+    if country:
+        users = db.query(models.User).filter(models.User.country == country).all()
+    else:
+        users = db.query(models.User).all()
     
     leaderboard_data = []
     for user in users:
-        challenge_score = db.query(func.sum(models.ChallengeFlag.points)).join(
+        # Build the query for challenge score
+        query = db.query(func.sum(models.ChallengeFlag.points)).join(
             models.ChallengeSubmission, models.ChallengeFlag.id == models.ChallengeSubmission.challenge_flag_id
         ).filter(
             models.ChallengeSubmission.user_id == user.id,
             models.ChallengeSubmission.is_correct == True
-        ).scalar() or 0
+        )
+        
+        # Apply season filter if exists
+        if season_start:
+            query = query.filter(models.ChallengeSubmission.created_at >= season_start)
+            
+        challenge_score = query.scalar() or 0
 
         total_score = challenge_score 
+        
+        # Only add users with > 0 score to the season leaderboard? 
+        # Or show everyone with 0? Usually showing 0 is fine.
         
         leaderboard_data.append({
             "username": user.username,
             "score": total_score,
-            "id": user.id
+            "id": user.id,
+            "country": user.country
         })
     
     leaderboard_data.sort(key=lambda x: x['score'], reverse=True)

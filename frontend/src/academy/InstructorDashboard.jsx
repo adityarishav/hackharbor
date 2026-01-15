@@ -10,6 +10,8 @@ const InstructorDashboard = () => {
     const [showModuleModal, setShowModuleModal] = useState(false);
     const [showLessonModal, setShowLessonModal] = useState(false);
     const [showMediaModal, setShowMediaModal] = useState(false);
+    const [showZipModal, setShowZipModal] = useState(false); // for Zip Modal
+    const [zipFile, setZipFile] = useState(null); // for Zip File
     const [uploadedImages, setUploadedImages] = useState([]);
     const [mediaSelectionMode, setMediaSelectionMode] = useState(null); // 'module' or 'lesson'
     const [selectedMedia, setSelectedMedia] = useState([]); // Array of URLs for multi-select
@@ -246,6 +248,32 @@ const InstructorDashboard = () => {
         }
     };
 
+    const handleZipUpload = async (e) => {
+        e.preventDefault();
+        if (!selectedModule || !zipFile) return;
+
+        const formData = new FormData();
+        formData.append('file', zipFile);
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await api.post(`/admin/academy/modules/${selectedModule.id}/lessons/upload-zip`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            const createdCount = Array.isArray(response.data) ? response.data.length : 1;
+            addNotification(`${createdCount} lesson(s) uploaded successfully!`, 'success');
+            setShowZipModal(false);
+            setZipFile(null);
+            fetchModuleDetails(selectedModule.id);
+        } catch (error) {
+            console.error('Failed to upload zip lesson:', error);
+            addNotification(error.response?.data?.detail || 'Failed to process zip file', 'error');
+        }
+    };
+
     return (
         <div className="max-w-6xl mx-auto pb-20">
             <div className="flex justify-between items-center mb-8">
@@ -319,15 +347,23 @@ const InstructorDashboard = () => {
                                     <h2 className="text-2xl font-bold text-white mb-2">{selectedModule.title}</h2>
                                     <p className="text-gray-400">{selectedModule.description}</p>
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        setLessonForm({ title: '', content: '', order: 0 });
-                                        setShowLessonModal(true);
-                                    }}
-                                    className="bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm flex items-center transition-colors"
-                                >
-                                    <FaPlus className="mr-2" /> Add Lesson
-                                </button>
+                                <div className="flex">
+                                    <button
+                                        onClick={() => {
+                                            setLessonForm({ title: '', content: '', order: 0 });
+                                            setShowLessonModal(true);
+                                        }}
+                                        className="bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm flex items-center transition-colors"
+                                    >
+                                        <FaPlus className="mr-2" /> Add Lesson
+                                    </button>
+                                    <button
+                                        onClick={() => setShowZipModal(true)}
+                                        className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg text-sm flex items-center transition-colors ml-2"
+                                    >
+                                        <FaPlus className="mr-2" /> Upload Zip
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-4">
@@ -587,8 +623,8 @@ const InstructorDashboard = () => {
                                             key={index}
                                             onClick={() => handleSelectImage(url)}
                                             className={`relative group border rounded-lg overflow-hidden cursor-pointer transition-all ${isSelected
-                                                    ? 'border-green-500 ring-2 ring-green-500/50'
-                                                    : 'border-gray-700 hover:border-cyan-500'
+                                                ? 'border-green-500 ring-2 ring-green-500/50'
+                                                : 'border-gray-700 hover:border-cyan-500'
                                                 }`}
                                         >
                                             <img src={url} alt={`Uploaded ${index}`} className="w-full h-32 object-cover" />
@@ -622,6 +658,50 @@ const InstructorDashboard = () => {
                                 )}
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Zip Upload Modal */}
+            {showZipModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-900 border border-purple-500/30 rounded-xl p-6 w-full max-w-md shadow-2xl">
+                        <h2 className="text-xl font-bold text-white mb-4">Upload Lesson Zip Bundle</h2>
+                        <p className="text-sm text-gray-400 mb-4">
+                            Upload a <code>.zip</code> file containing a <code>.md</code> file and any referenced images.
+                            The system will automatically create a lesson from the Markdown content and link images correctly.
+                        </p>
+                        <form onSubmit={handleZipUpload} className="space-y-4">
+                            <div>
+                                <label className="block text-sm text-gray-400 mb-1">Select Zip File</label>
+                                <input
+                                    type="file"
+                                    required
+                                    accept=".zip"
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-purple-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500"
+                                    onChange={(e) => setZipFile(e.target.files[0])}
+                                />
+                            </div>
+                            <div className="flex justify-end space-x-3 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowZipModal(false);
+                                        setZipFile(null);
+                                    }}
+                                    className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={!zipFile}
+                                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Upload & Process
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

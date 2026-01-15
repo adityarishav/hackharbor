@@ -3,12 +3,14 @@ import { AuthContext } from '../contexts/AuthContext';
 import api from '../services/api';
 import { useNotification } from '../components/Notification';
 import { FaUser, FaLock, FaSave, FaEnvelope } from 'react-icons/fa';
+import { countries } from '../constants/countries';
 
 const SettingsPage = () => {
     const { user, setUser } = useContext(AuthContext); // Assuming setUser is available in context to update local state
     const addNotification = useNotification();
 
     const [email, setEmail] = useState(user?.email || '');
+    const [country, setCountry] = useState(user?.country || '');
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -28,6 +30,9 @@ const SettingsPage = () => {
                 } else {
                     console.log('No email found in user profile');
                 }
+                if (response.data.country) {
+                    setCountry(response.data.country);
+                }
             } catch (error) {
                 console.error('Failed to fetch user profile:', error);
             }
@@ -43,7 +48,7 @@ const SettingsPage = () => {
         setIsLoading(true);
         try {
             const token = localStorage.getItem('access_token');
-            const response = await api.put('/users/me', { email }, {
+            const response = await api.put('/users/me', { email, country }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Update local user context if needed, though usually it might fetch from /users/me again
@@ -125,6 +130,22 @@ const SettingsPage = () => {
                                     placeholder="Enter your email"
                                 />
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Country</label>
+                            <select
+                                value={country}
+                                onChange={(e) => setCountry(e.target.value)}
+                                className="w-full glass-input rounded-xl p-3 text-white bg-gray-800 focus:ring-2 focus:ring-purple-500/50 transition-all"
+                            >
+                                <option value="">Select a country</option>
+                                {countries.map((c) => (
+                                    <option key={c.code} value={c.code}>
+                                        {c.flag} {c.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="flex justify-end">
